@@ -9,8 +9,11 @@
 </template>
 
 <script>
-
+import { fetchModuleList } from '@/api/module'
 export default {
+  mounted() {
+    fetchModuleList()
+  },
   methods: {
     // 添加模型
     handleCreate() {

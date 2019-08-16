@@ -7,7 +7,7 @@ Vue.use(Router)
 import Layout from '@/layout'
 
 /* Router Modules */
-import componentsRouter from './modules/components'
+// import componentsRouter from './modules/components'
 // import chartsRouter from './modules/charts'
 import tableRouter from './modules/table'
 // import nestedRouter from './modules/nested'
@@ -84,6 +84,237 @@ export const constantRoutes = [
     ]
   },
   {
+    path: '/system',
+    component: Layout,
+    redirect: '/system/orgnization',
+    name: 'System',
+    meta: { title: '系统设置', icon: 'guide' },
+    children: [
+      {
+        path: 'orgnization',
+        component: () => import('@/views/system/orgnization'),
+        name: 'OrgnizationSystem',
+        meta: { title: '机构管理', icon: 'edit' }
+      },
+      {
+        path: 'role',
+        component: () => import('@/views/system/role'),
+        name: 'RoleSystem',
+        meta: { title: '角色管理', icon: 'peoples' }
+      },
+      {
+        path: 'user',
+        component: () => import('@/views/system/user'),
+        name: 'UserSystem',
+        meta: { title: '用户管理', icon: 'user' }
+      },
+      {
+        path: 'city',
+        component: () => import('@/views/system/city'),
+        name: 'CitySystem',
+        meta: { title: '城市列表', icon: 'list' }
+      },
+      {
+        path: 'campus',
+        component: () => import('@/views/system/campus'),
+        name: 'CampusSystem',
+        meta: { title: '校区列表', icon: 'list' }
+      },
+      {
+        path: 'defend',
+        component: () => import('@/views/system/defend/index'),
+        name: 'Defend',
+        meta: { title: '系统维护', icon: 'password' },
+        redirect: '/system/defend/inlinelog',
+        children: [
+          {
+            path: 'inlinelog',
+            component: () => import('@/views/system/defend/inlinelog'),
+            name: 'InlinelogSystem',
+            meta: { title: '在线日志', icon: 'edit' }
+          },
+          {
+            path: 'load',
+            component: () => import('@/views/system/defend/load'),
+            name: 'LoadSystem',
+            meta: { title: '资源负载', icon: 'edit' }
+          },
+          {
+            path: 'smanager',
+            component: () => import('@/views/system/defend/smanager'),
+            name: 'SmanagerSystem',
+            meta: { title: '系统管理', icon: 'edit' }
+          },
+          {
+            path: 'functions',
+            component: () => import('@/views/system/defend/functions'),
+            name: 'FunctionsSystem',
+            meta: { title: '功能管理', icon: 'edit' }
+          },
+          {
+            path: 'ip',
+            component: () => import('@/views/system/defend/ip'),
+            name: 'IpSystem',
+            meta: { title: 'ip管理', icon: 'edit' }
+          },
+          {
+            path: 'permission',
+            component: () => import('@/views/system/defend/permission'),
+            name: 'PermissionSystem',
+            meta: { title: '权限操作日志', icon: 'edit' }
+          },
+          {
+            path: 'source',
+            component: () => import('@/views/system/defend/source'),
+            name: 'SourceSystem',
+            meta: { title: '数据源', icon: 'edit' }
+          },
+          {
+            path: 'logs',
+            component: () => import('@/views/system/defend/logs'),
+            name: 'LogsSystem',
+            meta: { title: '系统日志', icon: 'edit' }
+          }
+        ]
+      },
+      {
+        path: 'param',
+        component: () => import('@/views/system/param'),
+        name: 'CampusSystem',
+        meta: { title: '参数管理', icon: 'list' }
+      },
+      {
+        path: 'field',
+        component: () => import('@/views/system/field'),
+        name: 'CampusSystem',
+        meta: { title: '字典管理', icon: 'education' }
+      }
+    ]
+  },
+  {
+    path: '/wechat',
+    component: Layout,
+    redirect: '/wechat/message',
+    name: 'Wechat',
+    meta: { title: '微信管理', icon: 'wechat' },
+    children: [
+      {
+        path: 'message',
+        component: () => import('@/views/wechat/message'),
+        name: 'MessageWechat',
+        meta: { title: '消息管理', icon: 'message' }
+      },
+      {
+        path: 'rules',
+        component: () => import('@/views/wechat/rules'),
+        name: 'RulesWechat',
+        meta: { title: '规则管理', icon: 'list' }
+      },
+      {
+        path: 'template',
+        component: () => import('@/views/wechat/template'),
+        name: 'TemplateSystem',
+        meta: { title: '模板管理', icon: 'table' }
+      },
+      {
+        path: 'user',
+        component: () => import('@/views/wechat/user'),
+        name: 'UserWechat',
+        meta: { title: '用户管理', icon: 'user' }
+      },
+      {
+        path: 'public',
+        component: () => import('@/views/wechat/public'),
+        name: 'PublicWechat',
+        meta: { title: '公众号管理', icon: 'list' }
+      }
+    ]
+  },
+  {
+    path: '/train',
+    component: Layout,
+    redirect: '/train/defend',
+    name: 'Train',
+    meta: { title: '培训管理', icon: 'education' },
+    children: [
+      {
+        path: 'message',
+        component: () => import('@/views/train/defend'),
+        name: 'DefendTrain',
+        meta: { title: '课程维护', icon: 'list' }
+      },
+      {
+        path: 'setup',
+        component: () => import('@/views/train/setup'),
+        name: 'SetupTrain',
+        meta: { title: '课程设置', icon: 'tree-table' }
+      },
+      {
+        path: 'progress',
+        component: () => import('@/views/train/progress'),
+        name: 'ProgressTrain',
+        meta: { title: '学习进度', icon: 'skill' }
+      },
+      {
+        path: 'learn',
+        component: () => import('@/views/train/learn'),
+        name: 'LearnTrain',
+        meta: { title: '学习信息', icon: 'list' }
+      },
+      {
+        path: 'download',
+        component: () => import('@/views/train/download'),
+        name: 'DownloadTrain',
+        meta: { title: '下载记录', icon: 'list' }
+      }
+    ]
+  },
+  {
+    path: '/preparing',
+    component: Layout,
+    redirect: '/preparing/menu',
+    name: 'Preparing',
+    meta: { title: '备课管理', icon: 'education' },
+    children: [
+      {
+        path: 'menu',
+        component: () => import('@/views/preparing/menu'),
+        name: 'MenuPreparing',
+        meta: { title: '备课菜单设置', icon: 'list' }
+      },
+      {
+        path: 'defend',
+        component: () => import('@/views/preparing/defend'),
+        name: 'DefendPreparing',
+        meta: { title: '备课维护', icon: 'list' }
+      },
+      {
+        path: 'filetype',
+        component: () => import('@/views/preparing/filetype'),
+        name: 'FiletypePreparing',
+        meta: { title: '课件类型设置', icon: 'tree-table' }
+      },
+      {
+        path: 'learn',
+        component: () => import('@/views/preparing/learn'),
+        name: 'LearnPreparing',
+        meta: { title: '学习信息', icon: 'list' }
+      },
+      {
+        path: 'download',
+        component: () => import('@/views/preparing/download'),
+        name: 'DownloadPreparing',
+        meta: { title: '下载记录', icon: 'list' }
+      },
+      {
+        path: 'feedback',
+        component: () => import('@/views/preparing/feedback'),
+        name: 'FeedbackPreparing',
+        meta: { title: '反馈记录', icon: 'skill' }
+      }
+    ]
+  },
+  {
     path: '/module',
     component: Layout,
     children: [
@@ -132,7 +363,7 @@ export const constantRoutes = [
         path: 'index',
         component: () => import('@/views/profile/index'),
         name: 'Profile',
-        meta: { title: 'Profile', icon: 'user', noCache: true }
+        meta: { title: '个人中心', icon: 'user', noCache: true }
       }
     ]
   }
@@ -200,7 +431,7 @@ export const asyncRoutes = [
   },
 
   /** when your routing map is too long, you can split it into small modules **/
-  componentsRouter,
+  // componentsRouter,
   // chartsRouter,
   // nestedRouter,
   tableRouter,
@@ -209,6 +440,7 @@ export const asyncRoutes = [
     path: '/example',
     component: Layout,
     redirect: '/example/list',
+    hidden: true,
     name: 'Example',
     meta: {
       title: 'Example',
@@ -295,6 +527,7 @@ export const asyncRoutes = [
     component: Layout,
     redirect: '/excel/export-excel',
     name: 'Excel',
+    hidden: true,
     meta: {
       title: 'Excel',
       icon: 'excel'
@@ -332,6 +565,7 @@ export const asyncRoutes = [
     component: Layout,
     redirect: '/zip/download',
     alwaysShow: true,
+    hidden: true,
     name: 'Zip',
     meta: { title: 'Zip', icon: 'zip' },
     children: [
@@ -348,6 +582,7 @@ export const asyncRoutes = [
     path: '/pdf',
     component: Layout,
     redirect: '/pdf/index',
+    hidden: true,
     children: [
       {
         path: 'index',

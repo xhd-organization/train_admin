@@ -9,14 +9,14 @@
       </el-form-item>
       <el-form-item label="使用字段:" class="postInfo-container-item">
         <el-col :span="11">
-          <el-input v-model="postForm.field"/>
+          <el-input v-model="postForm.field" />
         </el-col>
         <el-col :span="11">
           例:id,title,url,imgUrl *表示所有的字段
         </el-col>
       </el-form-item>
       <el-form-item label="模型简介:" class="postInfo-container-item">
-        <el-input type="textarea" v-model="postForm.desc" />
+        <el-input v-model="postForm.desc" type="textarea" />
       </el-form-item>
       <el-form-item>
         <el-button v-loading="loading" style="margin-left: 10px;" type="primary" @click="submitForm">保存</el-button>

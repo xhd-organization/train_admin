@@ -1,19 +1,19 @@
 <template>
-  <el-table :data="list" style="width: 100%;padding-top: 15px;">
-    <el-table-column label="Order_No" min-width="200">
+  <el-table :data="feedback" style="width: 100%;padding-top: 15px;">
+    <el-table-column label="反馈内容" min-width="200">
       <template slot-scope="scope">
-        {{ scope.row.order_no | orderNoFilter }}
+        {{ scope.row.description }}
       </template>
     </el-table-column>
-    <el-table-column label="Price" width="195" align="center">
+    <el-table-column label="时间" width="195" align="center">
       <template slot-scope="scope">
-        ¥{{ scope.row.price | toThousandFilter }}
+        {{ scope.row.createTime | formatTime }}
       </template>
     </el-table-column>
-    <el-table-column label="Status" width="100" align="center">
+    <el-table-column label="状态" width="100" align="center">
       <template slot-scope="{row}">
-        <el-tag :type="row.status | statusFilter">
-          {{ row.status }}
+        <el-tag :type="row.type | statusFilter">
+          {{ row.type }}
         </el-tag>
       </template>
     </el-table-column>
@@ -21,35 +21,41 @@
 </template>
 
 <script>
-import { transactionList } from '@/api/remote-search'
-
+import { formatTime } from '@/utils'
 export default {
   filters: {
     statusFilter(status) {
       const statusMap = {
-        success: 'success',
-        pending: 'danger'
+        '1': 'success',
+        '2': 'danger'
       }
       return statusMap[status]
     },
+    formatTime(time) {
+      return formatTime(time, null, false)
+    },
     orderNoFilter(str) {
       return str.substring(0, 30)
+    }
+  },
+  props: {
+    feedback: {
+      type: Array,
+      default: function() {
+        return []
+      }
     }
   },
   data() {
     return {
       list: null
     }
-  },
-  created() {
-    this.fetchData()
-  },
-  methods: {
-    fetchData() {
-      transactionList().then(response => {
-        this.list = response.data.items.slice(0, 8)
-      })
-    }
   }
 }
 </script>
+
+<style type="text/css">
+  .el-table .cell{
+    white-space: nowrap
+  }
+</style>
