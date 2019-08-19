@@ -24,12 +24,15 @@
             <span>{{ scope.row.names }}</span>
           </template>
         </el-table-column>
-        <el-table-column label="操作" align="center" width="230" class-name="small-padding fixed-width">
+        <el-table-column v-if="is_admin" label="操作" align="center" width="260" class-name="small-padding fixed-width">
           <template slot-scope="{row}">
+            <el-button type="primary" size="small" @click="fieldEdit(row)">
+              模型字段
+            </el-button>
             <el-button type="primary" size="mini" @click="handleUpdate(row)">
               修改
             </el-button>
-            <el-button v-if="row.status!='deleted'" size="mini" type="danger" @click="deleteBtn(row,'deleted')">
+            <el-button size="mini" type="danger" @click="deleteBtn(row,'deleted')">
               删除
             </el-button>
           </template>
@@ -69,6 +72,7 @@
 
 <script>
 import { fetchModuleList } from '@/api/module'
+import { mapGetters } from 'vuex'
 import Pagination from '@/components/Pagination'
 
 const calendarTypeOptions = [
@@ -125,6 +129,7 @@ export default {
         type: '',
         status: 'published'
       },
+      is_admin: false, // 判断当前角色是否为超级管理员，只有超级管理员才能修改模型
       calendarTypeOptions,
       statusOptions: ['published', 'draft', 'deleted'],
       rules: {
@@ -134,13 +139,22 @@ export default {
       }
     }
   },
+  computed: {
+    ...mapGetters([
+      'roles'
+    ])
+  },
+  created() {
+    if (this.roles.includes('admin')) {
+      this.is_admin = true
+    }
+  },
   mounted() {
     this.getModuleList()
   },
   methods: {
     getModuleList() {
       fetchModuleList(this.listQuery).then(data => {
-        console.log(data.items)
         this.list = data.items
         this.total = data.total
         this.listLoading = false
@@ -156,14 +170,20 @@ export default {
         this.sortByID(order)
       }
     },
+    // 跳转到模型字段管理
+    fieldEdit(row) {
+      console.log(row)
+      this.$router.push('/module/field/' + row.ids)
+    },
     handleUpdate(row) {
-      this.temp = Object.assign({}, row) // copy obj
-      this.temp.timestamp = new Date(this.temp.timestamp)
-      this.dialogStatus = 'update'
-      this.dialogFormVisible = true
-      this.$nextTick(() => {
-        this.$refs['dataForm'].clearValidate()
-      })
+      this.$router.push('/module/edit/' + row.ids)
+      // this.temp = Object.assign({}, row)
+      // this.temp.timestamp = new Date(this.temp.timestamp)
+      // this.dialogStatus = 'update'
+      // this.dialogFormVisible = true
+      // this.$nextTick(() => {
+      //   this.$refs['dataForm'].clearValidate()
+      // })
     },
     deleteBtn(row) {
       console.log(row)

@@ -332,10 +332,17 @@ export const constantRoutes = [
         hidden: true
       },
       {
-        path: 'edit/:id(\\d+)',
+        path: 'field/:moduleid',
+        component: () => import('@/views/module/field'),
+        name: 'FieldModule',
+        meta: { title: '模型字段' },
+        hidden: true
+      },
+      {
+        path: 'edit/:moduleid',
         component: () => import('@/views/module/edit'),
         name: 'EditModule',
-        meta: { title: '编辑模型', noCache: true, activeMenu: '/module/list' },
+        meta: { title: '编辑模型', noCache: true },
         hidden: true
       }
     ]

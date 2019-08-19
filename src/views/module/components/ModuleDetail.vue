@@ -1,8 +1,8 @@
 <template>
   <div class="createPost-container">
     <el-form ref="postForm" :model="postForm" :rules="rules" class="form-container" label-width="100px">
-      <el-form-item label="模型名称:" class="postInfo-container-item" prop="name">
-        <el-input v-model="postForm.name" />
+      <el-form-item label="模型名称:" class="postInfo-container-item" prop="names">
+        <el-input v-model="postForm.names" />
       </el-form-item>
       <el-form-item label="模型表名:" class="postInfo-container-item" prop="tableName">
         <el-input v-model="postForm.tableName" />
@@ -16,7 +16,7 @@
         </el-col>
       </el-form-item>
       <el-form-item label="模型简介:" class="postInfo-container-item">
-        <el-input v-model="postForm.desc" type="textarea" />
+        <el-input v-model="postForm.description" type="textarea" />
       </el-form-item>
       <el-form-item>
         <el-button v-loading="loading" style="margin-left: 10px;" type="primary" @click="submitForm">保存</el-button>
@@ -28,7 +28,7 @@
 
 <script>
 import { validURL } from '@/utils/validate'
-import { fetchArticle } from '@/api/article'
+import { fetchModuleDetail } from '@/api/module'
 
 const defaultForm = {
   field: '*',
@@ -87,7 +87,7 @@ export default {
       loading: false,
       userListOptions: [],
       rules: {
-        name: { required: true, message: '请输入模型名称', trigger: 'blur' },
+        names: { required: true, message: '请输入模型名称', trigger: 'blur' },
         tableName: { required: true, message: '请输入模型表名', trigger: 'blur' },
         image_uri: [{ validator: validateRequire }],
         title: [{ validator: validateRequire }],
@@ -116,8 +116,8 @@ export default {
   },
   created() {
     if (this.isEdit) {
-      const id = this.$route.params && this.$route.params.id
-      this.fetchData(id)
+      const moduleid = this.$route.params && this.$route.params.moduleid
+      this.fetchData(moduleid)
     } else {
       this.postForm = Object.assign({}, defaultForm)
     }
@@ -131,13 +131,13 @@ export default {
     isActive(route) {
       return route.path === this.$route.path
     },
-    fetchData(id) {
-      fetchArticle(id).then(response => {
-        this.postForm = response.data
+    fetchData(moduleid) {
+      fetchModuleDetail({ moduleid }).then(data => {
+        this.postForm = data
 
         // just for test
-        this.postForm.title += `   Article Id:${this.postForm.id}`
-        this.postForm.content_short += `   Article Id:${this.postForm.id}`
+        this.postForm.title += `   Article Id:${this.postForm.moduleid}`
+        this.postForm.content_short += `   Article Id:${this.postForm.moduleid}`
 
         // set tagsview title
         this.setTagsViewTitle()
@@ -149,13 +149,13 @@ export default {
       })
     },
     setTagsViewTitle() {
-      const title = 'Edit Article'
-      const route = Object.assign({}, this.tempRoute, { title: `${title}-${this.postForm.id}` })
+      const title = '编辑模型'
+      const route = Object.assign({}, this.tempRoute, { title: `${title}-${this.postForm.names}` })
       this.$store.dispatch('tagsView/updateVisitedView', route)
     },
     setPageTitle() {
-      const title = 'Edit Article'
-      document.title = `${title} - ${this.postForm.id}`
+      const title = '编辑模型'
+      document.title = `${title} - ${this.postForm.names}`
     },
     submitForm() {
       console.log(this.postForm)
@@ -164,7 +164,7 @@ export default {
           this.loading = true
           this.$notify({
             title: '成功',
-            message: '发布文章成功',
+            message: '发布模型成功',
             type: 'success',
             duration: 2000
           })

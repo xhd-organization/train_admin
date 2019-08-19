@@ -8,3 +8,19 @@ export function fetchModuleList(query) {
   })
 }
 
+export function fetchModuleDetail(query) {
+  return request({
+    url: '/getmoduledetail',
+    method: 'get',
+    params: query
+  })
+}
+
+export function fetchModuleField(query) {
+  return request({
+    url: '/modulefield',
+    method: 'get',
+    params: query
+  })
+}
+
