@@ -333,10 +333,30 @@ export const constantRoutes = [
       },
       {
         path: 'field/:moduleid',
-        component: () => import('@/views/module/field'),
+        component: () => import('@/views/module/fieldindex'),
         name: 'FieldModule',
         meta: { title: '模型字段' },
-        hidden: true
+        redirect: '',
+        hidden: true,
+        children: [{
+          path: '',
+          component: () => import('@/views/module/field'),
+          name: 'IndexField',
+          meta: { title: '字段列表' },
+          hidden: true
+        }, {
+          path: 'create',
+          component: () => import('@/views/module/createfield'),
+          name: 'CreateField',
+          meta: { title: '添加字段' },
+          hidden: true
+        }, {
+          path: ':fieldid',
+          component: () => import('@/views/module/editfield'),
+          name: 'EditField',
+          meta: { title: '编辑字段' },
+          hidden: true
+        }]
       },
       {
         path: 'edit/:moduleid',

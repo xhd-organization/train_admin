@@ -1,15 +1,15 @@
 <template>
   <div class="createPost-container">
     <el-form ref="postForm" :model="postForm" :rules="rules" class="form-container" label-width="100px">
-      <el-form-item label="模型名称:" class="postInfo-container-item" prop="names">
-        <el-input v-model="postForm.names" />
+      <el-form-item label="模型名称:" class="postInfo-container-item" prop="title">
+        <el-input v-model="postForm.title" />
       </el-form-item>
-      <el-form-item label="模型表名:" class="postInfo-container-item" prop="tableName">
-        <el-input v-model="postForm.tableName" />
+      <el-form-item label="模型表名:" class="postInfo-container-item" prop="name">
+        <el-input v-model="postForm.name" />
       </el-form-item>
       <el-form-item label="使用字段:" class="postInfo-container-item">
         <el-col :span="11">
-          <el-input v-model="postForm.field" />
+          <el-input v-model="postForm.listfields" />
         </el-col>
         <el-col :span="11">
           例:id,title,url,imgUrl *表示所有的字段
@@ -27,24 +27,13 @@
 </template>
 
 <script>
-import { validURL } from '@/utils/validate'
-import { fetchModuleDetail } from '@/api/module'
+import { createModule, fetchModuleDetail, updateModule } from '@/api/module'
 
 const defaultForm = {
-  field: '*',
+  listfields: '*',
   name: '',
-  tableName: '',
-  status: 'draft',
-  title: '', // 文章题目
-  content: '', // 文章内容
-  content_short: '', // 文章摘要
-  source_uri: '', // 文章外链
-  image_uri: '', // 文章图片
-  display_time: undefined, // 前台展示时间
-  id: undefined,
-  platforms: ['a-platform'],
-  comment_disabled: false,
-  importance: 0
+  title: '', // 模型名称
+  id: undefined
 }
 
 export default {
@@ -67,51 +56,16 @@ export default {
         callback()
       }
     }
-    const validateSourceUri = (rule, value, callback) => {
-      if (value) {
-        if (validURL(value)) {
-          callback()
-        } else {
-          this.$message({
-            message: '外链url填写不正确',
-            type: 'error'
-          })
-          callback(new Error('外链url填写不正确'))
-        }
-      } else {
-        callback()
-      }
-    }
     return {
       postForm: Object.assign({}, defaultForm),
       loading: false,
-      userListOptions: [],
       rules: {
+        name: { required: true, message: '请输入模型表名', trigger: 'blur' },
         names: { required: true, message: '请输入模型名称', trigger: 'blur' },
         tableName: { required: true, message: '请输入模型表名', trigger: 'blur' },
-        image_uri: [{ validator: validateRequire }],
-        title: [{ validator: validateRequire }],
-        content: [{ validator: validateRequire }],
-        source_uri: [{ validator: validateSourceUri, trigger: 'blur' }]
+        title: [{ validator: validateRequire }]
       },
       tempRoute: {}
-    }
-  },
-  computed: {
-    contentShortLength() {
-      return this.postForm.content_short.length
-    },
-    displayTime: {
-      // set and get is useful when the data
-      // returned by the back end api is different from the front end
-      // back end return => "2013-06-25 06:59:25"
-      // front end need timestamp => 1372114765000
-      get() {
-        return (+new Date(this.postForm.display_time))
-      },
-      set(val) {
-        this.postForm.display_time = new Date(val)
-      }
     }
   },
   created() {
@@ -135,10 +89,6 @@ export default {
       fetchModuleDetail({ moduleid }).then(data => {
         this.postForm = data
 
-        // just for test
-        this.postForm.title += `   Article Id:${this.postForm.moduleid}`
-        this.postForm.content_short += `   Article Id:${this.postForm.moduleid}`
-
         // set tagsview title
         this.setTagsViewTitle()
 
@@ -157,19 +107,33 @@ export default {
       const title = '编辑模型'
       document.title = `${title} - ${this.postForm.names}`
     },
-    submitForm() {
+    async submitForm() {
       console.log(this.postForm)
       this.$refs.postForm.validate(valid => {
         if (valid) {
           this.loading = true
-          this.$notify({
-            title: '成功',
-            message: '发布模型成功',
-            type: 'success',
-            duration: 2000
-          })
-          this.postForm.status = 'published'
-          this.loading = false
+          const form = Object.assign({}, this.postForm, { moduleid: this.postForm.ids })
+          if (this.isEdit) {
+            updateModule(form).then(data => {
+              this.$notify({
+                title: '成功',
+                message: '更新模型成功',
+                type: 'success',
+                duration: 2000
+              })
+              this.loading = false
+            })
+          } else {
+            createModule(this.postForm).then(data => {
+              this.$notify({
+                title: '成功',
+                message: '创建模型成功',
+                type: 'success',
+                duration: 2000
+              })
+              this.loading = false
+            })
+          }
         } else {
           console.log('error submit!!')
           return false
@@ -212,7 +176,6 @@ export default {
         showClose: true,
         duration: 1000
       })
-      this.postForm.status = 'draft'
     }
   }
 }
