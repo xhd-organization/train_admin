@@ -18,6 +18,12 @@
       <el-form-item label="模型简介:" class="postInfo-container-item">
         <el-input v-model="postForm.description" type="textarea" />
       </el-form-item>
+      <el-form-item label="新建表字段:" class="postInfo-container-item">
+        <el-radio-group v-model="postForm.emptytable">
+          <el-radio label="1">空表字段</el-radio>
+          <el-radio label="0">普通数据列表字段</el-radio>
+        </el-radio-group>
+      </el-form-item>
       <el-form-item>
         <el-button v-loading="loading" style="margin-left: 10px;" type="primary" @click="submitForm">保存</el-button>
         <el-button @click="cancelForm">取消</el-button>
@@ -31,6 +37,7 @@ import { createModule, fetchModuleDetail, updateModule } from '@/api/module'
 
 const defaultForm = {
   listfields: '*',
+  emptytable: '0',
   name: '',
   title: '', // 模型名称
   id: undefined

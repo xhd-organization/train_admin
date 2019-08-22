@@ -22,19 +22,22 @@
           <el-option value="verify" label="验证码" />
         </el-select>
       </el-form-item>
-      <el-form-item label="字段名" prop="name">
+      <el-form-item label="字段名" prop="field">
+        <el-input v-model="form.field" />
+      </el-form-item>
+      <el-form-item label="字段别名" prop="name">
         <el-input v-model="form.name" />
       </el-form-item>
-      <el-form-item label="字段别名" prop="title">
-        <el-input v-model="form.title" />
-      </el-form-item>
       <el-form-item v-if="form.type" label="字段相关设置" prop="setup">
-        <!-- <el-input v-model="form.title" /> -->
+        <el-row :gutter="20" type="flex" justify="start">
+          <el-col :span="3" class="align">文本框长度</el-col>
+          <el-col :span="3"><el-input v-model="form.setup['size']" /></el-col>
+        </el-row>
       </el-form-item>
       <el-form-item label="字段class类名" prop="classname">
         <el-input v-model="form.classname" />
       </el-form-item>
-      <el-form-item label="时间" required>
+      <el-form-item v-if="form.type==='datetime'" label="时间" required>
         <el-col :span="11">
           <el-form-item prop="date1">
             <el-date-picker v-model="form.date1" type="date" placeholder="选择日期" style="width: 100%;" />
@@ -47,8 +50,8 @@
           </el-form-item>
         </el-col>
       </el-form-item>
-      <el-form-item label="验证规则" prop="rules">
-        <el-select v-model="form.rules" placeholder="验证规则类型">
+      <el-form-item label="验证规则" prop="pattern">
+        <el-select v-model="form.pattern" placeholder="验证规则类型">
           <el-option value="pattern_email" label="电子邮件地址" />
           <el-option value="pattern_url" label="网址" />
           <el-option value="pattern_date" label="日期" />
@@ -113,7 +116,16 @@ export default {
     return {
       form: {
         required: '0',
-        role: []
+        name: '',
+        setup: {},
+        title: '',
+        tip: '',
+        pattern: '',
+        role: [],
+        desc: '',
+        errormsg: '',
+        listorder: 0,
+        status: 0
       },
       rules: {
         name: [
@@ -168,6 +180,7 @@ export default {
     submitForm(formName) {
       this.$refs[formName].validate((valid) => {
         if (valid) {
+          console.log(this.form)
           this.createField(this.form)
         } else {
           console.log('error submit!!')
@@ -184,4 +197,5 @@ export default {
 
 <style type="scss" scoped>
   .line{ text-align: center;}
+  .align{ text-align: center;}
 </style>
