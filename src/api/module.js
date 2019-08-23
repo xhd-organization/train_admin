@@ -63,3 +63,11 @@ export function updateModuleField(data) {
     data
   })
 }
+
+export function updateFieldSort(data) {
+  return request({
+    url: '/sortfield',
+    method: 'post',
+    data
+  })
+}

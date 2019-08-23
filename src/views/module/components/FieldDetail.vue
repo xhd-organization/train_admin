@@ -1,8 +1,8 @@
 <template>
   <div class="app-container">
-    <el-form ref="form" :model="form" :rules="rules" label-width="140px" class="demo-form" :disabled="isEdit">
+    <el-form ref="form" :model="form" :rules="rules" label-width="170px">
       <el-form-item label="字段类型" prop="type">
-        <el-select v-model="form.type" placeholder="字段类型">
+        <el-select v-model="form.type" placeholder="字段类型" :disabled="isEdit">
           <el-option value="catid" label="栏目" />
           <el-option value="title" label="标题" />
           <el-option value="typeid" label="类别" />
@@ -28,16 +28,16 @@
       <el-form-item label="字段别名" prop="name">
         <el-input v-model="form.name" />
       </el-form-item>
-      <el-form-item v-if="form.type" label="字段相关设置" prop="setup">
+      <el-form-item v-if="form.type" label="字段相关设置">
         <el-row :gutter="20" type="flex" justify="start">
           <el-col :span="3" class="align">文本框长度</el-col>
           <el-col :span="3"><el-input v-model="form.setup['size']" /></el-col>
         </el-row>
       </el-form-item>
-      <el-form-item label="字段class类名" prop="classname">
+      <el-form-item label="字段class类名">
         <el-input v-model="form.classname" />
       </el-form-item>
-      <el-form-item v-if="form.type==='datetime'" label="时间" required>
+      <el-form-item v-if="form.type === 'datetime'" label="时间" required>
         <el-col :span="11">
           <el-form-item prop="date1">
             <el-date-picker v-model="form.date1" type="date" placeholder="选择日期" style="width: 100%;" />
@@ -45,12 +45,12 @@
         </el-col>
         <el-col class="line" :span="2">-</el-col>
         <el-col :span="11">
-          <el-form-item prop="date2">
+          <el-form-item>
             <el-time-picker v-model="form.date2" placeholder="选择时间" style="width: 100%;" />
           </el-form-item>
         </el-col>
       </el-form-item>
-      <el-form-item label="验证规则" prop="pattern">
+      <el-form-item label="验证规则">
         <el-select v-model="form.pattern" placeholder="验证规则类型">
           <el-option value="pattern_email" label="电子邮件地址" />
           <el-option value="pattern_url" label="网址" />
@@ -77,28 +77,31 @@
       <el-form-item label="即时配送" prop="delivery">
         <el-switch v-model="form.delivery" />
       </el-form-item> -->
-      <el-form-item label="会员组" prop="group">
-        <el-checkbox-group v-model="form.group">
-          <el-checkbox label="超级管理员" name="group" />
-          <el-checkbox label="普通管理员" name="group" />
-          <el-checkbox label="普通用户" name="group" />
+      <el-form-item label="禁止设置字段值的会员组">
+        <el-checkbox-group v-model="form.unpostgroup">
+          <el-checkbox label="超级管理员" name="unpostgroup" />
+          <el-checkbox label="普通管理员" name="unpostgroup" />
+          <el-checkbox label="普通用户" name="unpostgroup" />
         </el-checkbox-group>
       </el-form-item>
-      <el-form-item label="是否必填" prop="required">
+      <el-form-item v-if="form.type === 'title'" label="限制字符串长度范围">
+        <el-col :span="1"><span>最小</span></el-col><el-col :span="4"><el-input v-model="form.minlength" /></el-col><el-col :span="1"><span>最大</span></el-col><el-col :span="4"><el-input v-model="form.maxlength" /></el-col><span>个字符</span>
+      </el-form-item>
+      <el-form-item label="是否必填">
         <el-radio-group v-model="form.required">
-          <el-radio label="1">是</el-radio>
-          <el-radio label="0">否</el-radio>
+          <el-radio :label="1">是</el-radio>
+          <el-radio :label="0">否</el-radio>
         </el-radio-group>
       </el-form-item>
-      <el-form-item label="验证失败错误说明" prop="errormsg">
+      <el-form-item label="验证失败错误说明">
         <el-input v-model="form.errormsg" />
       </el-form-item>
-      <el-form-item label="字段说明" prop="desc">
+      <el-form-item label="字段说明">
         <el-input v-model="form.desc" type="textarea" />
       </el-form-item>
       <el-form-item>
         <el-button type="primary" @click="submitForm('form')">提交</el-button>
-        <el-button @click="resetForm('form')">重置</el-button>
+        <el-button :disabled="isEdit" @click="resetForm('form')">重置</el-button>
       </el-form-item>
     </el-form>
   </div>
@@ -115,22 +118,30 @@ export default {
   data() {
     return {
       form: {
-        required: '0',
+        required: 0,
         name: '',
         setup: {},
         title: '',
         tip: '',
         pattern: '',
         role: [],
+        unpostgroup: [],
         desc: '',
         errormsg: '',
         listorder: 0,
+        type: '',
         status: 0
       },
+      moduleid: this.$route.params.moduleid,
+      fieldid: this.$route.params.fieldid,
       rules: {
         name: [
           { required: true, message: '请输入字段名', trigger: 'blur' },
-          { min: 3, max: 30, message: '长度在 3 到 30 个字符', trigger: 'blur' }
+          { min: 2, max: 30, message: '长度在 3 到 30 个字符', trigger: 'blur' }
+        ],
+        field: [
+          { required: true, message: '请输入字段名', trigger: 'blur' },
+          { min: 2, max: 30, message: '长度在 3 到 30 个字符', trigger: 'blur' }
         ],
         title: [
           { required: true, message: '请输入字段别名', trigger: 'blur' },
@@ -153,8 +164,8 @@ export default {
         date2: [
           { type: 'date', required: false, message: '请选择时间', trigger: 'change' }
         ],
-        group: [
-          { type: 'array', required: false, message: '请至少选择一个会员访问权限组', trigger: 'change' }
+        unpostgroup: [
+          { type: 'array', required: false, message: '', trigger: 'change' }
         ],
         desc: [
           { required: false, message: '请填写字段说明', trigger: 'blur' }
@@ -162,11 +173,16 @@ export default {
       }
     }
   },
+  created() {
+    if (this.isEdit) {
+      this.fetchModuleField()
+    }
+  },
   methods: {
     // 获取字段信息
     fetchModuleField() {
       fetchModuleFieldDetail({ moduleid: this.moduleid, fieldid: this.fieldid }).then(data => {
-        console.log(data)
+        this.form = data
       })
     },
     // 添加字段
@@ -180,10 +196,8 @@ export default {
     submitForm(formName) {
       this.$refs[formName].validate((valid) => {
         if (valid) {
-          console.log(this.form)
           this.createField(this.form)
         } else {
-          console.log('error submit!!')
           return false
         }
       })

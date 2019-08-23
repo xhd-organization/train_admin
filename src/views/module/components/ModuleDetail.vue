@@ -18,7 +18,7 @@
       <el-form-item label="模型简介:" class="postInfo-container-item">
         <el-input v-model="postForm.description" type="textarea" />
       </el-form-item>
-      <el-form-item label="新建表字段:" class="postInfo-container-item">
+      <el-form-item v-if="!isEdit" label="新建表字段:" class="postInfo-container-item">
         <el-radio-group v-model="postForm.emptytable">
           <el-radio label="1">空表字段</el-radio>
           <el-radio label="0">普通数据列表字段</el-radio>
