@@ -25,14 +25,14 @@
           </template>
         </el-table-column>
         <el-table-column v-if="is_admin" label="操作" align="center" width="260" class-name="small-padding fixed-width">
-          <template slot-scope="{row}">
-            <el-button type="primary" size="small" @click="fieldEdit(row)">
+          <template slot-scope="scope">
+            <el-button type="primary" size="small" @click="fieldEdit(scope.row)">
               模型字段
             </el-button>
-            <el-button type="primary" size="mini" @click="handleUpdate(row)">
+            <el-button type="primary" size="mini" @click="handleUpdate(scope.row)">
               修改
             </el-button>
-            <el-button size="mini" type="danger" @click="deleteBtn(row,'deleted')">
+            <el-button size="mini" type="danger" @click="deleteBtn(scope.$index, scope.row)">
               删除
             </el-button>
           </template>
@@ -71,7 +71,7 @@
 </template>
 
 <script>
-import { fetchModuleList } from '@/api/module'
+import { fetchModuleList, deleteModule } from '@/api/module'
 import { mapGetters } from 'vuex'
 import Pagination from '@/components/Pagination'
 
@@ -162,6 +162,7 @@ export default {
     },
     // 添加模型
     handleCreate() {
+      // this.$store.dispatch('tagsView/addView', { name: 'CreateModule' })
       this.$router.push('/module/create')
     },
     sortChange(data) {
@@ -185,8 +186,24 @@ export default {
       //   this.$refs['dataForm'].clearValidate()
       // })
     },
-    deleteBtn(row) {
-      console.log(row)
+    deleteBtn(index, row) {
+      this.$confirm(`确定删除${row.title || ''}模型?`, '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        deleteModule({ moduleid: row.ids }).then(data => {
+          this.$notify({
+            title: '成功',
+            message: '删除模型成功',
+            type: 'success',
+            duration: 2000
+          })
+          this.list.splice(index, 1)
+        })
+      }).catch((err) => {
+        console.log(err)
+      })
     }
   }
 }

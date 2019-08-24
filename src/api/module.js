@@ -24,6 +24,14 @@ export function updateModule(data) {
   })
 }
 
+export function deleteModule(data) {
+  return request({
+    url: '/deletemodule',
+    method: 'post',
+    data
+  })
+}
+
 export function fetchModuleDetail(query) {
   return request({
     url: '/getmoduledetail',

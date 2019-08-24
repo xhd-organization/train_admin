@@ -129,6 +129,7 @@ export default {
                 duration: 2000
               })
               this.loading = false
+              this.cancelForm()
             })
           } else {
             createModule(this.postForm).then(data => {
@@ -139,6 +140,7 @@ export default {
                 duration: 2000
               })
               this.loading = false
+              this.cancelForm()
             })
           }
         } else {
