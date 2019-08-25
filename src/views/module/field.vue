@@ -35,14 +35,14 @@
         </template>
       </el-table-column>
       <el-table-column v-if="is_admin" label="操作" align="center" width="260" class-name="small-padding fixed-width">
-        <template slot-scope="{row}">
-          <el-button type="primary" size="mini" @click="fieldEdit(row)">
+        <template slot-scope="scope">
+          <el-button type="primary" size="mini" @click="fieldEdit(scope.row)">
             修改
           </el-button>
-          <el-button :disabled="row.issystem && (['catid', 'title', 'status', 'createtime'].indexOf(row.field) > -1) ? true : false" type="primary" size="small" @click="disabledBtn(row)">
+          <el-button :disabled="scope.row.issystem && (['catid', 'title', 'status', 'createtime'].indexOf(scope.row.field) > -1) ? true : false" type="primary" size="small" @click="disabledBtn(scope.row)">
             禁用
           </el-button>
-          <el-button :disabled="row.issystem ? true: false" size="mini" type="danger" @click="deleteBtn(row,'deleted')">
+          <el-button :disabled="scope.row.issystem ? true: false" size="mini" type="danger" @click="deleteBtn(scope.$index, scope.row)">
             删除
           </el-button>
         </template>
@@ -55,7 +55,7 @@
 </template>
 
 <script>
-import { fetchModuleFieldList, updateFieldSort } from '@/api/module'
+import { fetchModuleFieldList, updateFieldSort, deleteModuleField } from '@/api/module'
 
 import { mapGetters } from 'vuex'
 
@@ -98,8 +98,25 @@ export default {
     disabledBtn() {
       console.log('禁用')
     },
-    // deleteBtn
-    deleteBtn() {
+    // 删除字段
+    deleteBtn(index, row) {
+      this.$confirm(`确定删除${row.name || ''}字段?`, '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(() => {
+        deleteModuleField({ id: row.id, field: row.field, moduleid: row.moduleid }).then(data => {
+          this.$notify({
+            title: '成功',
+            message: '删除字段成功',
+            type: 'success',
+            duration: 2000
+          })
+          this.field_arr.splice(index, 1)
+        })
+      }).catch((err) => {
+        console.log(err)
+      })
     },
     // 添加模型
     handleCreate() {

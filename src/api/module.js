@@ -72,6 +72,14 @@ export function updateModuleField(data) {
   })
 }
 
+export function deleteModuleField(data) {
+  return request({
+    url: '/deletemodulefield',
+    method: 'post',
+    data
+  })
+}
+
 export function updateFieldSort(data) {
   return request({
     url: '/sortfield',

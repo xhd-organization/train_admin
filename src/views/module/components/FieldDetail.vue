@@ -19,7 +19,6 @@
           <el-option value="number" label="数字" />
           <el-option value="datetime" label="日期和时间" />
           <el-option value="linkage" label="联动菜单" />
-          <el-option value="verify" label="验证码" />
         </el-select>
       </el-form-item>
       <el-form-item label="字段名" prop="field">
@@ -28,10 +27,89 @@
       <el-form-item label="字段别名" prop="name">
         <el-input v-model="form.name" />
       </el-form-item>
-      <el-form-item v-if="form.type" label="字段相关设置">
-        <el-row :gutter="20" type="flex" justify="start">
-          <el-col :span="3" class="align">文本框长度</el-col>
+      <el-form-item v-if="!setup_filter(form.type)" label="字段相关设置">
+        <el-row v-if="form.type === 'title'" :gutter="20" type="flex" justify="start">
+          <el-col :span="4" class="align">是否使用标题样式标题样式</el-col>
+          <el-col :span="3">
+            <el-radio-group v-model="form.setup['style']">
+              <el-radio :label="1">是</el-radio>
+              <el-radio :label="0">否</el-radio>
+            </el-radio-group>
+          </el-col>
+        </el-row>
+        <el-row v-if="form.type === 'title' || form.type === 'text' || form.type === 'number'" :gutter="20" type="flex" justify="start">
+          <el-col :span="4" class="align">文本框长度</el-col>
           <el-col :span="3"><el-input v-model="form.setup['size']" /></el-col>
+        </el-row>
+        <el-row v-if="form.type === 'number'" :gutter="20" type="flex" justify="start">
+          <el-col :span="4" class="align">是否包括负数</el-col>
+          <el-col :span="2"><el-checkbox v-model="form.setup['numbertype']" label="1" checked>不包括负数</el-checkbox></el-col>
+        </el-row>
+        <el-row v-if="form.type === 'number'" :gutter="20" type="flex" justify="start">
+          <el-col :span="4" class="align">小数位数</el-col>
+          <el-col :span="4">
+            <el-select v-model="form.setup['decimaldigits']">
+              <el-option value="0" label="0" selected />
+              <el-option value="1" label="1" />
+              <el-option value="2" label="2" />
+              <el-option value="3" label="3" />
+              <el-option value="4" label="4" />
+              <el-option value="5" label="5" />
+            </el-select>
+          </el-col>
+          <el-col v-if="form.setup['fieldtype'] === 'tinyint' || form.setup['fieldtype'] === 'smallint' || form.setup['fieldtype'] === 'mediumint' || form.setup['fieldtype'] === 'int'" :span="4" class="align"><el-checkbox v-model="form.setup['numbertype']" label="1" checked>不包括负数</el-checkbox></el-col>
+        </el-row>
+        <el-row v-if="form.type === 'typeid'" :gutter="20" type="flex" justify="start">
+          <el-col :span="4" class="align">选项类型</el-col>
+          <el-col :span="8">
+            <el-radio-group v-model="form.setup['inputtype']">
+              <el-radio label="checkbox">复选框</el-radio>
+              <el-radio label="select">下拉列表框</el-radio>
+              <el-radio label="radio">单选框</el-radio>
+            </el-radio-group>
+          </el-col>
+        </el-row>
+        <el-row v-if="form.type === 'typeid' || form.type === 'select' || form.type === 'textarea'" :gutter="20" type="flex" justify="start">
+          <el-col :span="4" class="align">字段类型</el-col>
+          <el-col :span="4">
+            <el-select v-model="form.setup['fieldtype']" placeholder="字段类型">
+              <el-option v-if="form.type === 'typeid' || form.type === 'select' || form.type === 'radio' || form.type === 'checkbox'" value="varchar" label="字符 VARCHAR" />
+              <el-option v-if="form.type === 'typeid' || form.type === 'select' || form.type === 'radio' || form.type === 'checkbox'" value="tinyint" label="整数 TINYINT(3)" />
+              <el-option v-if="form.type === 'typeid' || form.type === 'select' || form.type === 'radio' || form.type === 'checkbox'" value="smallint" label="整数 SMALLINT(5)" />
+              <el-option v-if="form.type === 'select' || form.type === 'radio' || form.type === 'checkbox'" value="mediumint" label="整数 MEDIUMINT(8)" />
+              <el-option v-if="form.type === 'select' || form.type === 'radio' || form.type === 'checkbox'" value="int" label="整数 INT(10)" />
+              <el-option v-if="form.type === 'textarea'" value="mediumtext" label="mediumtext" />
+              <el-option v-if="form.type === 'textarea'" value="text" label="TEXT" />
+            </el-select>
+          </el-col>
+          <el-col v-if="form.setup['fieldtype'] === 'tinyint' || form.setup['fieldtype'] === 'smallint' || form.setup['fieldtype'] === 'mediumint' || form.setup['fieldtype'] === 'int'" :span="4" class="align"><el-checkbox v-model="form.setup['numbertype']" label="1" checked>不包括负数</el-checkbox></el-col>
+        </el-row>
+        <el-row v-if="form.type === 'select' || form.type === 'radio' || form.type === 'checkbox'" :gutter="20" type="flex" justify="start">
+          <el-col :span="4" class="align">选项列表</el-col>
+          <el-col :span="8">
+            <el-input v-model="form.setup['options']" type="textarea" placeholder="选项名称|值,选项名称|值" />
+          </el-col>
+        </el-row>
+        <el-row v-if="form.type === 'select'" :gutter="20" type="flex" justify="start">
+          <el-col :span="4" class="align">选项类型</el-col>
+          <el-col :span="8">
+            <el-radio-group v-model="form.setup['multiple']">
+              <el-radio label="checkbox">复选框</el-radio>
+              <el-radio label="select">下拉列表框</el-radio>
+            </el-radio-group>
+          </el-col>
+        </el-row>
+        <el-row v-if="form.type === 'typeid' || form.type === 'radio' || form.type === 'checkbox'" :gutter="20" type="flex" justify="start">
+          <el-col :span="4" class="align">{{ form.type === 'typeid' ? '复选框或单选框的宽度' : '宽度' }}</el-col>
+          <el-col :span="3"><el-input v-model="form.setup['labelwidth']" /></el-col>
+        </el-row>
+        <el-row v-if="form.type === 'typeid'" :gutter="20" type="flex" justify="start">
+          <el-col :span="4" class="align">顶级类别ID</el-col>
+          <el-col :span="3"><el-input v-model="form.setup['default']" /></el-col>
+        </el-row>
+        <el-row v-if="form.type === 'text' || form.type === 'textarea' || form.type === 'editor' || form.type === 'select' || form.type === 'number'" :gutter="20" type="flex" justify="start">
+          <el-col :span="4" class="align">默认值</el-col>
+          <el-col :span="3"><el-input v-model="form.setup['default']" /></el-col>
         </el-row>
       </el-form-item>
       <el-form-item label="字段class类名">
@@ -84,7 +162,7 @@
           <el-checkbox label="普通用户" name="unpostgroup" />
         </el-checkbox-group>
       </el-form-item>
-      <el-form-item v-if="form.type === 'title'" label="限制字符串长度范围">
+      <el-form-item label="限制字符串长度范围">
         <el-col :span="1"><span>最小</span></el-col><el-col :span="4"><el-input v-model="form.minlength" /></el-col><el-col :span="1"><span>最大</span></el-col><el-col :span="4"><el-input v-model="form.maxlength" /></el-col><span>个字符</span>
       </el-form-item>
       <el-form-item label="是否必填">
@@ -100,14 +178,16 @@
         <el-input v-model="form.desc" type="textarea" />
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" @click="submitForm('form')">提交</el-button>
+        <el-button type="primary" @click="submitForm('form')">{{ isEdit ? '保存' : '提交' }}</el-button>
         <el-button :disabled="isEdit" @click="resetForm('form')">重置</el-button>
       </el-form-item>
+      <el-input v-if="isEdit" v-model="form.oldfield" hidden />
     </el-form>
   </div>
 </template>
 <script>
 import { fetchModuleFieldDetail, createModuleField, updateModuleField } from '@/api/module'
+const filter_setup = ['catid', 'createtime', 'linkage']
 export default {
   props: {
     isEdit: {
@@ -124,7 +204,6 @@ export default {
         title: '',
         tip: '',
         pattern: '',
-        role: [],
         unpostgroup: [],
         desc: '',
         errormsg: '',
@@ -132,6 +211,7 @@ export default {
         type: '',
         status: 0
       },
+
       moduleid: this.$route.params.moduleid,
       fieldid: this.$route.params.fieldid,
       rules: {
@@ -183,11 +263,14 @@ export default {
     fetchModuleField() {
       fetchModuleFieldDetail({ moduleid: this.moduleid, fieldid: this.fieldid }).then(data => {
         this.form = data
+        this.oldfield = data.field
       })
     },
     // 添加字段
     createField() {
-      createModuleField().then(data => {})
+      createModuleField().then(data => {
+
+      })
     },
     // 更新字段
     updateField() {
@@ -204,6 +287,12 @@ export default {
     },
     resetForm(formName) {
       this.$refs[formName].resetFields()
+    },
+    setup_filter(type) {
+      if (filter_setup.indexOf(type) > -1) {
+        return true
+      }
+      return false
     }
   }
 }
@@ -212,4 +301,10 @@ export default {
 <style type="scss" scoped>
   .line{ text-align: center;}
   .align{ text-align: center;}
+  .el-row {
+    margin-bottom: 10px;
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
 </style>
