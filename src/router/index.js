@@ -315,6 +315,18 @@ export const constantRoutes = [
     ]
   },
   {
+    path: '/category',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        component: () => import('@/views/category/index'),
+        name: 'Category',
+        meta: { title: '栏目管理', icon: 'list', noCache: true }
+      }
+    ]
+  },
+  {
     path: '/module',
     component: Layout,
     children: [

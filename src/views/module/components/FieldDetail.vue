@@ -202,7 +202,10 @@ export default {
         name: '',
         setup: {},
         title: '',
-        tip: '',
+        tips: '',
+        classname: '',
+        minlength: 0,
+        maxlength: 0,
         pattern: '',
         unpostgroup: [],
         desc: '',
@@ -259,27 +262,47 @@ export default {
     }
   },
   methods: {
+    isActive(route) {
+      return route.path === this.$route.path
+    },
     // 获取字段信息
     fetchModuleField() {
       fetchModuleFieldDetail({ moduleid: this.moduleid, fieldid: this.fieldid }).then(data => {
         this.form = data
-        this.oldfield = data.field
+        this.form.oldfield = data.field
       })
-    },
-    // 添加字段
-    createField() {
-      createModuleField().then(data => {
-
-      })
-    },
-    // 更新字段
-    updateField() {
-      updateModuleField().then(data => {})
     },
     submitForm(formName) {
       this.$refs[formName].validate((valid) => {
         if (valid) {
-          this.createField(this.form)
+          this.loading = true
+          if (filter_setup.indexOf(this.form.type) > -1) {
+            Object.assign(this.form, { setup: '' })
+          }
+          const create_form = Object.assign({}, this.form, { moduleid: this.moduleid })
+          if (this.isEdit) {
+            updateModuleField(this.form).then(data => {
+              this.$notify({
+                title: '成功',
+                message: '更新字段成功',
+                type: 'success',
+                duration: 2000
+              })
+              this.loading = false
+              this.cancelForm()
+            })
+          } else {
+            createModuleField(create_form).then(data => {
+              this.$notify({
+                title: '成功',
+                message: '创建字段成功',
+                type: 'success',
+                duration: 2000
+              })
+              this.loading = false
+              this.cancelForm()
+            })
+          }
         } else {
           return false
         }
@@ -287,6 +310,28 @@ export default {
     },
     resetForm(formName) {
       this.$refs[formName].resetFields()
+    },
+    cancelForm() {
+      this.$store.dispatch('tagsView/delView', this.$route).then(({ visitedViews }) => {
+        if (this.isActive(this.$route)) {
+          this.toLastView(visitedViews, this.$route)
+        }
+      })
+    },
+    toLastView(visitedViews, view) {
+      const latestView = visitedViews.slice(-1)[0]
+      if (latestView) {
+        this.$router.push(latestView)
+      } else {
+        // now the default is to redirect to the home page if there is no tags-view,
+        // you can adjust it according to your needs.
+        if (view.name === 'Dashboard') {
+          // to reload home page
+          this.$router.replace({ path: '/redirect' + view.fullPath })
+        } else {
+          this.$router.push('/')
+        }
+      }
     },
     setup_filter(type) {
       if (filter_setup.indexOf(type) > -1) {

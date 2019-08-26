@@ -21,7 +21,7 @@
         </el-table-column>
         <el-table-column label="模型名称" align="center">
           <template slot-scope="scope">
-            <span>{{ scope.row.names }}</span>
+            <span>{{ scope.row.names ? scope.row.names : scope.row.title }}</span>
           </template>
         </el-table-column>
         <el-table-column v-if="is_admin" label="操作" align="center" width="260" class-name="small-padding fixed-width">
