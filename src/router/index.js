@@ -317,12 +317,27 @@ export const constantRoutes = [
   {
     path: '/category',
     component: Layout,
+    redirect: '/category/index',
     children: [
       {
         path: 'index',
         component: () => import('@/views/category/index'),
         name: 'Category',
         meta: { title: '栏目管理', icon: 'list', noCache: true }
+      },
+      {
+        path: 'create',
+        component: () => import('@/views/category/create'),
+        name: 'CreateCategory',
+        hidden: true,
+        meta: { title: '创建栏目', icon: 'form', noCache: true }
+      },
+      {
+        path: ':catid',
+        component: () => import('@/views/category/edit'),
+        hidden: true,
+        name: 'EditCategory',
+        meta: { title: '编辑栏目', icon: 'form', noCache: true }
       }
     ]
   },
