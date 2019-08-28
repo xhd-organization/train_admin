@@ -7,9 +7,7 @@
         </el-select>
       </el-form-item>
       <el-form-item label="上级栏目" class="postInfo-container-item" prop="parentid">
-        <el-select v-model="postForm.parentid" popper-class="category-select">
-          <el-option v-for="item in category_arr" :key="item.id" :class="item.is_last === true ? `last-child level${item.level}` : item.level > 0 ? `last-child level${item.level}` : ''" :value="item.id" :label="item.catname" />
-        </el-select>
+        <el-cascader ref="category" v-model="select_category" :props="{ label: 'catname', value: 'id', expandTrigger: 'hover' }" :options="category_arr" :show-all-levels="false" @click="getCheckedNodes" @change="changeParentId" />
       </el-form-item>
       <el-form-item label="栏目名称:" class="postInfo-container-item" prop="catname">
         <el-input v-model="postForm.catname" />
@@ -33,10 +31,9 @@ import { fetchCategoryList, createCategory, fetchCategoryDetail, updateCategory 
 import { fetchModuleList } from '@/api/module'
 
 const defaultForm = {
-  description: '',
-  listfield: '0',
+  listfields: '*',
   moduleid: '',
-  parentid: 0,
+  parentid: '0',
   catname: '',
   catdir: '',
   id: undefined
@@ -72,6 +69,7 @@ export default {
       },
       tempRoute: {},
       category_arr: [], // 栏目列表
+      select_category: [0], // 选中栏目
       module_arr: [] // 模型列表
     }
   },
@@ -81,12 +79,7 @@ export default {
       this.fetchData(catid)
     } else {
       this.postForm = Object.assign({}, defaultForm)
-      if (this.$route.query.pid) {
-        this.$set(this.postForm, 'parentid', Number(this.$route.query.pid))
-        this.$set(this.postForm, 'moduleid', this.$route.query.moduleid)
-      }
     }
-
     this.fetchCategoryList()
     this.fetchModuleList()
 
@@ -103,6 +96,8 @@ export default {
     fetchData(id) {
       fetchCategoryDetail({ id }).then(data => {
         this.postForm = data
+        this.select_category = [data.parentid]
+        this.$set(this.postForm, 'parentid', data.parentid)
         // set tagsview title
         this.setTagsViewTitle()
 
@@ -190,35 +185,35 @@ export default {
       fetchCategoryList().then(data => {
         if (data instanceof Array && data.length > 0) {
           this.category_arr = this.get_tree(0, data)
+          this.category_arr.unshift({ id: 0, catname: '作为一级栏目', parentid: '0' })
         }
-        this.category_arr.unshift({ id: 0, catname: '作为一级栏目', parentid: '0' })
       })
     },
     // 获取模型列表
     fetchModuleList() {
       fetchModuleList().then(data => {
-        if (!this.postForm.moduleid) {
-          this.$set(this.postForm, 'moduleid', data.items[0].ids)
-        }
+        this.$set(this.postForm, 'moduleid', data.items[0].ids)
         this.module_arr = data.items
       })
     },
+    getCheckedNodes() {
+      console.log(this.$refs.category)
+    },
     get_tree(bcid, data, level = 0) {
-      let category_arr = []
-      data.map((item, index) => {
+      const arr = data.filter((item, index) => {
         const str_arr = this.getChild(item.id, data, (item.level ? item.level : 0))
-        if (item.parentid === bcid) {
-          category_arr.push(item)
-        }
         if (str_arr.length > 0) {
-          str_arr[str_arr.length - 1]['is_last'] = true
-          category_arr = category_arr.concat(str_arr)
+          item['children'] = str_arr
+          item['children'][str_arr.length - 1]['is_last'] = true
           item['hasChildren'] = true
         } else {
           item['hasChildren'] = false
         }
+        if (item.parentid === bcid) {
+          return true
+        }
       })
-      return category_arr
+      return arr
     },
     getChild(bcid, arr, level) {
       const arr_str = arr.filter(item => {
@@ -252,38 +247,22 @@ export default {
       }
     }
   }
+
+  .word-counter {
+    width: 40px;
+    position: absolute;
+    right: 10px;
+    top: 0px;
+  }
 }
 
-</style>
-<style type="text/css">
-  .category-select span{
-    position: relative;
+.article-textarea /deep/ {
+  textarea {
+    padding-right: 40px;
+    resize: none;
+    border: none;
+    border-radius: 0px;
+    border-bottom: 1px solid #bfcbd9;
   }
-  .category-select .child span, .category-select .last-child span{
-    padding-left: 15px;
-    margin-left: 10px;
-  }
-  .category-select .child span:before{
-    content: '├';
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 100%;
-    display: flex;
-    align-items: center;
-  }
-  .category-select .last-child span:before{
-    content: '└';
-    position: absolute;
-    left: 0;
-    top: 0;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    padding-top: 5px;
-    box-sizing: border-box;
-  }
-  .category-select .level2{
-    margin-left: 20px;
-  }
+}
 </style>

@@ -31,3 +31,19 @@ export function createCategory(data) {
     data
   })
 }
+
+export function deleteCategory(data) {
+  return request({
+    url: '/deletecategory',
+    method: 'post',
+    data
+  })
+}
+
+export function updateCategorySort(data) {
+  return request({
+    url: '/sortcategory',
+    method: 'post',
+    data
+  })
+}
