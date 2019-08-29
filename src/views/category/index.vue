@@ -20,19 +20,19 @@
           <el-input v-model="scope.row.listorder" />
         </template>
       </el-table-column>
-      <el-table-column label="catid" prop="id" align="center" width="60">
+      <el-table-column label="catid" prop="id" align="center" width="100">
         <template slot-scope="scope">
           <span>{{ scope.row.id }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="栏目名称" align="center">
+      <el-table-column label="栏目名称" width="200">
         <template slot-scope="scope">
-          <span :style="tableRowPaddingStyle(scope.row)" class="catname" :class="scope.row.is_last === true ? 'last-child' : scope.row.level > 0 ? 'child' : ''">{{ scope.row.catname }}</span>
+          <span :style="tableRowPaddingStyle(scope.row)" class="catname" :class="scope.row.is_last === true ? 'last-child' : scope.row.level > 0 ? 'child' : ''">{{ scope.row.name }}</span>
         </template>
       </el-table-column>
       <el-table-column label="所属模型" align="center">
         <template slot-scope="scope">
-          <span>{{ scope.row.module }}</span>
+          <span>{{ scope.row.moduleid | formatModuleName }}</span>
         </template>
       </el-table-column>
       <el-table-column v-if="is_admin" label="操作" align="center" width="260" class-name="small-padding fixed-width">
@@ -57,14 +57,31 @@
 
 <script>
 import { fetchCategoryList, updateCategorySort, deleteCategory } from '@/api/category'
+import { fetchModuleList } from '@/api/module'
 
 import { mapGetters } from 'vuex'
+let module_arr = []
+fetchModuleList().then(data => {
+  module_arr = data.items
+})
 
 export default {
-  name: 'FieldModule',
+  name: 'Category',
+  filters: {
+    formatModuleName(moduleid) {
+      let module_name = ''
+      module_arr.map((item, index) => {
+        if (item.ids === moduleid) {
+          module_name = item.title || item.names
+        }
+      })
+      return module_name
+    }
+  },
   data() {
     return {
       category_arr: [],
+      module_arr: [],
       tableKey: 0,
       is_admin: false,
       catid: this.$route.params.catid,
@@ -95,7 +112,6 @@ export default {
       fetchCategoryList().then(data => {
         if (data instanceof Array && data.length > 0) {
           this.category_arr = this.get_tree(0, data)
-          console.log(this.category_arr)
         }
         this.listLoading = false
         this.$nextTick(() => {
@@ -206,7 +222,7 @@ export default {
     tableRowPaddingStyle(row) {
       return {
         'padding-left': `${(row.level ? 30 : 0)}px`,
-        'margin-left': `${row.level * 50}px`
+        'margin-left': `${row.level * 30}px`
       }
     },
     expandAll() {

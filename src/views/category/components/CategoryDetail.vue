@@ -8,14 +8,14 @@
       </el-form-item>
       <el-form-item label="上级栏目" class="postInfo-container-item" prop="parentid">
         <el-select v-model="postForm.parentid" popper-class="category-select">
-          <el-option v-for="item in category_arr" :key="item.id" :class="item.is_last === true ? `last-child level${item.level}` : item.level > 0 ? `last-child level${item.level}` : ''" :value="item.id" :label="item.catname" />
+          <el-option v-for="item in category_arr" :key="item.id" :class="item.is_last === true ? `last-child level${item.level}` : item.level > 0 ? `child level${item.level}` : ''" :value="item.id" :label="item.name" />
         </el-select>
       </el-form-item>
-      <el-form-item label="栏目名称:" class="postInfo-container-item" prop="catname">
-        <el-input v-model="postForm.catname" />
+      <el-form-item label="栏目名称:" class="postInfo-container-item" prop="name">
+        <el-input v-model="postForm.name" />
       </el-form-item>
-      <el-form-item label="栏目目录:" class="postInfo-container-item" prop="catdir">
-        <el-input v-model="postForm.catdir" />
+      <el-form-item label="栏目目录:" class="postInfo-container-item" prop="path">
+        <el-input v-model="postForm.path" />
       </el-form-item>
       <el-form-item label="栏目简介:" class="postInfo-container-item">
         <el-input v-model="postForm.description" type="textarea" />
@@ -37,8 +37,8 @@ const defaultForm = {
   listfield: '0',
   moduleid: '',
   parentid: 0,
-  catname: '',
-  catdir: '',
+  name: '',
+  path: '',
   id: undefined
 }
 
@@ -66,8 +66,8 @@ export default {
       postForm: Object.assign({}, defaultForm),
       loading: false,
       rules: {
-        catname: { required: true, message: '请输入栏目名称', trigger: 'blur' },
-        catdir: { required: true, message: '请输入栏目目录', trigger: 'blur' },
+        name: { required: true, message: '请输入栏目名称', trigger: 'blur' },
+        path: { required: true, message: '请输入栏目目录', trigger: 'blur' },
         title: [{ validator: validateRequire }]
       },
       tempRoute: {},
@@ -114,12 +114,12 @@ export default {
     },
     setTagsViewTitle() {
       const title = '编辑栏目'
-      const route = Object.assign({}, this.tempRoute, { title: `${title}-${this.postForm.catname}` })
+      const route = Object.assign({}, this.tempRoute, { title: `${title}-${this.postForm.name}` })
       this.$store.dispatch('tagsView/updateVisitedView', route)
     },
     setPageTitle() {
       const title = '编辑栏目'
-      document.title = `${title} - ${this.postForm.catname}`
+      document.title = `${title} - ${this.postForm.name}`
     },
     // 提交表单信息
     async submitForm() {
@@ -190,13 +190,14 @@ export default {
       fetchCategoryList().then(data => {
         if (data instanceof Array && data.length > 0) {
           this.category_arr = this.get_tree(0, data)
+          console.log(this.category_arr)
         }
-        this.category_arr.unshift({ id: 0, catname: '作为一级栏目', parentid: '0' })
+        this.category_arr.unshift({ id: 0, name: '作为一级栏目', parentid: '0' })
       })
     },
     // 获取模型列表
     fetchModuleList() {
-      fetchModuleList().then(data => {
+      fetchModuleList({ limit: 200 }).then(data => {
         if (!this.postForm.moduleid) {
           this.$set(this.postForm, 'moduleid', data.items[0].ids)
         }

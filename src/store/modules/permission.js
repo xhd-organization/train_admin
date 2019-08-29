@@ -1,5 +1,6 @@
 import { asyncRoutes, constantRoutes } from '@/router'
-
+import { fetchCategoryList } from '@/api/category'
+import Layout from '@/layout'
 /**
  * Use meta.role to determine if the current user has permission
  * @param roles
@@ -11,6 +12,76 @@ function hasPermission(roles, route) {
   } else {
     return true
   }
+}
+
+// 首字母大写
+function titleCase5(str) {
+  return str.toLowerCase().replace(/( |^)[a-z]/g, (L) => L.toUpperCase())
+}
+
+// 获取栏目并格式化成路由形式
+function get_router(bcid, data, level = 0) {
+  const arr = data.filter((item, index) => {
+    const str_arr = get_child_router(item.id, data, (item.level ? item.level : 0))
+    if (str_arr.length > 0) {
+      item['children'] = str_arr
+      item['children'][str_arr.length - 1]['is_last'] = true
+      item['hasChildren'] = true
+      str_arr.map((subitem, idx) => {
+        item['children'][idx]['meta'] = {
+          title: subitem.name,
+          icon: 'list',
+          moduleid: subitem.moduleid,
+          id: subitem.id,
+          pagesize: subitem.pagesize
+        }
+        item['children'][idx]['component'] = () => import('@/views/content/index')
+        item['children'][idx]['name'] = titleCase5(subitem.path) + titleCase5(item.path)
+      })
+    } else {
+      item['hasChildren'] = false
+    }
+    if (item.parentid === bcid) {
+      item['meta'] = {
+        title: item.name,
+        icon: 'list',
+        moduleid: item.moduleid,
+        id: item.id,
+        pagesize: item.pagesize
+      }
+      item['component'] = Layout
+      if (item.hasChildren) {
+        item['redirect'] = `/${item.path}/${item.children[0].path}`
+        item['name'] = titleCase5(item.path)
+      } else {
+        item['children'] = [{
+          path: 'index',
+          component: () => import('@/views/content/index'),
+          name: titleCase5(item.path),
+          meta: {
+            title: item.name,
+            icon: 'list',
+            moduleid: item.moduleid,
+            id: item.id,
+            pagesize: item.pagesize
+          }
+        }]
+      }
+      item['path'] = '/' + item.path
+      return true
+    }
+  })
+  return arr
+}
+
+function get_child_router(bcid, arr, level) {
+  const arr_str = arr.filter(item => {
+    if (item.parentid === bcid) {
+      item['level'] = level + 1
+      return true
+    }
+  })
+  return arr_str
 }
 
 /**
@@ -47,13 +118,15 @@ const mutations = {
 }
 
 const actions = {
-  generateRoutes({ commit }, roles) {
+  async generateRoutes({ commit }, roles) {
+    const router_role = await fetchCategoryList()
+    const router_arr = get_router(0, router_role)
     return new Promise(resolve => {
       let accessedRoutes
       if (roles.includes('admin')) {
-        accessedRoutes = asyncRoutes || []
+        accessedRoutes = router_arr.concat(asyncRoutes) || []
       } else {
-        accessedRoutes = filterAsyncRoutes(asyncRoutes, roles)
+        accessedRoutes = filterAsyncRoutes(router_arr.concat(asyncRoutes), roles)
       }
       commit('SET_ROUTES', accessedRoutes)
       resolve(accessedRoutes)
