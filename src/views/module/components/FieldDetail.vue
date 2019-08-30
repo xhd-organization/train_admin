@@ -174,6 +174,12 @@
       <el-form-item label="验证失败错误说明">
         <el-input v-model="form.errormsg" />
       </el-form-item>
+      <el-form-item label="是否在前台投稿时显示">
+        <el-radio-group v-model="form.ispost">
+          <el-radio :label="1">是</el-radio>
+          <el-radio :label="0">否</el-radio>
+        </el-radio-group>
+      </el-form-item>
       <el-form-item label="字段说明">
         <el-input v-model="form.desc" type="textarea" />
       </el-form-item>
@@ -181,13 +187,13 @@
         <el-button type="primary" @click="submitForm('form')">{{ isEdit ? '保存' : '提交' }}</el-button>
         <el-button :disabled="isEdit" @click="resetForm('form')">重置</el-button>
       </el-form-item>
-      <el-input v-if="isEdit" v-model="form.oldfield" hidden />
+      <el-input v-if="isEdit" v-model="form.oldfield" style="display: none;" />
     </el-form>
   </div>
 </template>
 <script>
 import { fetchModuleFieldDetail, createModuleField, updateModuleField } from '@/api/module'
-const filter_setup = ['catid', 'createtime', 'linkage']
+const filter_setup = ['catid', 'createtime', 'linkage', 'groupid']
 export default {
   props: {
     isEdit: {
@@ -211,6 +217,7 @@ export default {
         desc: '',
         errormsg: '',
         listorder: 0,
+        ispost: 0,
         type: '',
         status: 0
       },
@@ -334,7 +341,7 @@ export default {
       }
     },
     setup_filter(type) {
-      if (filter_setup.indexOf(type) > -1) {
+      if (filter_setup.indexOf(type) > -1 || !type) {
         return true
       }
       return false

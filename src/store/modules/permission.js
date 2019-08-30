@@ -30,10 +30,12 @@ function get_router(bcid, data, level = 0) {
       str_arr.map((subitem, idx) => {
         item['children'][idx]['meta'] = {
           title: subitem.name,
-          icon: 'list',
+          icon: subitem.icon || 'list',
           moduleid: subitem.moduleid,
           id: subitem.id,
-          pagesize: subitem.pagesize
+          pagesize: subitem.pagesize,
+          listfields: subitem.listfields,
+          selectfields: subitem.selectfields
         }
         item['children'][idx]['component'] = () => import('@/views/content/index')
         item['children'][idx]['name'] = titleCase5(subitem.path) + titleCase5(item.path)
@@ -44,10 +46,12 @@ function get_router(bcid, data, level = 0) {
     if (item.parentid === bcid) {
       item['meta'] = {
         title: item.name,
-        icon: 'list',
+        icon: item.icon || 'list',
         moduleid: item.moduleid,
         id: item.id,
-        pagesize: item.pagesize
+        pagesize: item.pagesize,
+        listfields: item.listfields,
+        selectfields: item.selectfields
       }
       item['component'] = Layout
       if (item.hasChildren) {
@@ -60,10 +64,12 @@ function get_router(bcid, data, level = 0) {
           name: titleCase5(item.path),
           meta: {
             title: item.name,
-            icon: 'list',
+            icon: item.icon || 'list',
             moduleid: item.moduleid,
             id: item.id,
-            pagesize: item.pagesize
+            pagesize: item.pagesize,
+            listfields: item.listfields,
+            selectfields: item.selectfields
           }
         }]
       }

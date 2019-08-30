@@ -50,7 +50,8 @@ export default {
   },
   methods: {
     generateIconCode(symbol) {
-      return `<svg-icon icon-class="${symbol}" />`
+      // return `<svg-icon icon-class="${symbol}" />`
+      return symbol
     },
     generateElementIconCode(symbol) {
       return `<i class="el-icon-${symbol}" />`

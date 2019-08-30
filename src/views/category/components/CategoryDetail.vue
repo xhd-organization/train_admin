@@ -1,8 +1,8 @@
 <template>
   <div class="createPost-container">
-    <el-form ref="postForm" :model="postForm" :rules="rules" class="form-container" label-width="100px">
+    <el-form ref="postForm" :model="postForm" :rules="rules" class="form-container" label-width="120px">
       <el-form-item label="请选择模型" class="postInfo-container-item" prop="moduleid">
-        <el-select v-model="postForm.moduleid">
+        <el-select v-model="postForm.moduleid" @change="changeCateogryModule">
           <el-option v-for="item in module_arr" :key="item.ids" :value="item.ids" :label="item.title || item.names" />
         </el-select>
       </el-form-item>
@@ -17,11 +17,24 @@
       <el-form-item label="栏目目录:" class="postInfo-container-item" prop="path">
         <el-input v-model="postForm.path" />
       </el-form-item>
+      <el-form-item v-if="field_arr.length > 0" label="列表显示字段:" class="postInfo-container-item">
+        <el-checkbox-group v-model="listfields">
+          <el-checkbox v-for="field in field_arr" :key="field.id" :label="field.field" name="listfields">{{ field.name }}</el-checkbox>
+        </el-checkbox-group>
+      </el-form-item>
+      <el-form-item v-if="field_arr.length > 0" label="查询字段:" class="postInfo-container-item">
+        <el-checkbox-group v-model="selectfields">
+          <el-checkbox v-for="field in field_arr" :key="field.id" :label="field.field" name="selectfields">{{ field.name }}</el-checkbox>
+        </el-checkbox-group>
+      </el-form-item>
+      <el-form-item label="栏目图标:" class="postInfo-container-item">
+        <el-input v-model="postForm.icon" style="width: 80px; margin-right: 20px;" /><svg-icon v-if="postForm.icon" :icon-class="postForm.icon" class-name="disabled" />
+      </el-form-item>
       <el-form-item label="栏目简介:" class="postInfo-container-item">
         <el-input v-model="postForm.description" type="textarea" />
       </el-form-item>
       <el-form-item>
-        <el-button v-loading="loading" style="margin-left: 10px;" type="primary" @click="submitForm">保存</el-button>
+        <el-button v-loading="loading" style="margin-left: 10px;" type="primary" @click="submitForm">{{ isEdit ? '保存' : '提交' }}</el-button>
         <el-button @click="cancelForm">取消</el-button>
       </el-form-item>
     </el-form>
@@ -30,18 +43,20 @@
 
 <script>
 import { fetchCategoryList, createCategory, fetchCategoryDetail, updateCategory } from '@/api/category'
-import { fetchModuleList } from '@/api/module'
+import { fetchModuleList, fetchModuleFieldList } from '@/api/module'
 
 const defaultForm = {
   description: '',
-  listfield: '0',
   moduleid: '',
   parentid: 0,
   name: '',
   path: '',
+  icon: '',
+  listfields: [],
+  selectfields: [],
   id: undefined
 }
-
+console.log(Object.assign({}, defaultForm))
 export default {
   name: 'CategoryDetail',
   props: {
@@ -65,6 +80,8 @@ export default {
     return {
       postForm: Object.assign({}, defaultForm),
       loading: false,
+      listfields: [], // 列表显示字段
+      selectfields: [], // 查询字段
       rules: {
         name: { required: true, message: '请输入栏目名称', trigger: 'blur' },
         path: { required: true, message: '请输入栏目目录', trigger: 'blur' },
@@ -72,7 +89,8 @@ export default {
       },
       tempRoute: {},
       category_arr: [], // 栏目列表
-      module_arr: [] // 模型列表
+      module_arr: [], // 模型列表
+      field_arr: [] // 字段列表
     }
   },
   created() {
@@ -103,6 +121,8 @@ export default {
     fetchData(id) {
       fetchCategoryDetail({ id }).then(data => {
         this.postForm = data
+        this.listfields = data.listfields ? data.listfields.split(',') : []
+        this.selectfields = data.selectfields ? data.selectfields.split(',') : []
         // set tagsview title
         this.setTagsViewTitle()
 
@@ -123,11 +143,10 @@ export default {
     },
     // 提交表单信息
     async submitForm() {
-      console.log(this.postForm)
       this.$refs.postForm.validate(valid => {
         if (valid) {
           this.loading = true
-          const form = Object.assign({}, this.postForm, { moduleid: this.postForm.ids })
+          const form = Object.assign({ }, this.postForm, { listfields: this.listfields, selectfields: this.selectfields })
           if (this.isEdit) {
             updateCategory(form).then(data => {
               this.$notify({
@@ -140,7 +159,7 @@ export default {
               this.cancelForm()
             })
           } else {
-            createCategory(this.postForm).then(data => {
+            createCategory(form).then(data => {
               this.$notify({
                 title: '成功',
                 message: '创建栏目成功',
@@ -193,6 +212,9 @@ export default {
           console.log(this.category_arr)
         }
         this.category_arr.unshift({ id: 0, name: '作为一级栏目', parentid: '0' })
+        if (this.isEdit) {
+          this.fetchModuleFieldList()
+        }
       })
     },
     // 获取模型列表
@@ -203,6 +225,17 @@ export default {
         }
         this.module_arr = data.items
       })
+    },
+    // 获取字段列表
+    fetchModuleFieldList() {
+      fetchModuleFieldList({ moduleid: this.postForm.moduleid }).then(data => {
+        this.field_arr = data
+      })
+    },
+    // 修改模型回调事件
+    changeCateogryModule(value) {
+      this.postForm.moduleid = value
+      this.fetchModuleFieldList()
     },
     get_tree(bcid, data, level = 0) {
       let category_arr = []
@@ -286,5 +319,10 @@ export default {
   }
   .category-select .level2{
     margin-left: 20px;
+  }
+</style>
+<style type="text/css" scoped="">
+  .disabled {
+    pointer-events: none;
   }
 </style>

@@ -20,7 +20,7 @@
           <el-input v-model="scope.row.listorder" />
         </template>
       </el-table-column>
-      <el-table-column label="catid" prop="id" align="center" width="100">
+      <el-table-column label="栏目id" prop="id" align="center" width="150">
         <template slot-scope="scope">
           <span>{{ scope.row.id }}</span>
         </template>
@@ -61,7 +61,7 @@ import { fetchModuleList } from '@/api/module'
 
 import { mapGetters } from 'vuex'
 let module_arr = []
-fetchModuleList().then(data => {
+fetchModuleList({ limit: 200 }).then(data => {
   module_arr = data.items
 })
 
@@ -157,7 +157,7 @@ export default {
           cancelButtonText: '取消',
           type: 'warning'
         }).then(() => {
-          deleteCategory({ id: row.id }).then(data => {
+          deleteCategory({ id: row.id, moduleid: row.moduleid }).then(data => {
             this.$notify({
               title: '成功',
               message: '删除栏目成功',
