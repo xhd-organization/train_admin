@@ -7,3 +7,27 @@ export function fetchContentList(query) {
     params: query
   })
 }
+
+export function createContent(data) {
+  return request({
+    url: '/createcontent',
+    method: 'post',
+    data
+  })
+}
+
+export function updateContent(data) {
+  return request({
+    url: '/updatecontent',
+    method: 'post',
+    data
+  })
+}
+
+export function deleteContent(data) {
+  return request({
+    url: '/deletecontent',
+    method: 'post',
+    data
+  })
+}
