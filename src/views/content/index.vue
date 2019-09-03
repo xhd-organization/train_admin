@@ -41,8 +41,8 @@
     </el-table>
     <pagination v-show="total > 0" :total="total" :page.sync="listQuery.page" :limit.sync="listQuery.limit" @pagination="fetchContentList" />
     <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
-      <el-form ref="dataForm" :rules="rules" :model="temp" label-position="left" label-width="70px" style="width: 400px; margin-left:50px;">
-        <el-form-item v-for="field in field_arr" :key="field.id" :label="field.name" :prop="temp[field.field]">
+      <el-form ref="dataForm" :rules="rules" :model="temp" label-position="left" label-width="100px" style="width: 400px; margin-left:50px;">
+        <el-form-item v-for="field in field_arr" :key="field.id" :label="field.name" :prop="field.field" :required="field.required ===1">
           <el-input v-if="field.type === 'title' || field.type === 'text' || field.type === 'catid' || field.type === 'varchar'" v-model="temp[field.field]" :placeholder="field.name" />
           <el-select v-if="field.type === 'radio' || field.type === 'checkbox' || field.type === 'groupid' || field.type === 'select'" v-model="temp[field.field]" :placeholder="field.name" class="filter-item">
             <el-option v-for="item in filterSelectOptions(field.setup)" :key="item.key" :label="item.name" :value="item.value" />
@@ -64,16 +64,10 @@ import { fetchModuleFieldList } from '@/api/module'
 import waves from '@/directive/waves' // waves directive
 
 import { parseTime } from '@/utils'
+import { validateMessages, valideRules } from '@/utils/validate'
 const jsonToExcel = import('@/vendor/Export2Excel')
 
 import Pagination from '@/components/Pagination' // secondary package based on el-pagination
-
-const calendarTypeOptions = [
-  { key: 'CN', display_name: 'China' },
-  { key: 'US', display_name: 'USA' },
-  { key: 'JP', display_name: 'Japan' },
-  { key: 'EU', display_name: 'Eurozone' }
-]
 
 export default {
   name: 'Content',
@@ -118,11 +112,6 @@ export default {
       select_field: this.$route.meta.selectfields ? this.$route.meta.selectfields.split(',') : [], // 需要查询的字段
       select_arr: [], // 查询列表
       postForm: {}, // 查询表单数据
-      importanceOptions: [1, 2, 3],
-      calendarTypeOptions,
-      sortOptions: [{ label: 'ID Ascending', key: '+id' }, { label: 'ID Descending', key: '-id' }],
-      statusOptions: ['published', 'draft', 'deleted'],
-      showReviewer: false,
       temp: {}, // 编辑框表单数据对象
       temp_base: {}, // 编辑框表单数据对象基础模板
       dialogFormVisible: false, // 是否显示编辑框
@@ -131,13 +120,7 @@ export default {
         update: '编辑',
         create: '添加'
       },
-      dialogPvVisible: false,
-      pvData: [],
-      rules: {
-        type: [{ required: true, message: 'type is required', trigger: 'change' }],
-        timestamp: [{ type: 'date', required: true, message: 'timestamp is required', trigger: 'change' }],
-        title: [{ required: true, message: 'title is required', trigger: 'blur' }]
-      },
+      rules: {},
       downloadLoading: false
     }
   },
@@ -167,10 +150,14 @@ export default {
             this.temp[item.field] = ''
           })
           this.temp_base = Object.assign({}, this.temp)
-          console.log(this.field_arr)
+          this.rules = this.formatRules(data)
+          console.log(this.rules)
           data.map(item => {
             if (this.display_field.indexOf(item.field) > -1) {
               this.display_arr.push(item)
+              this.display_arr.sort((a, b) => {
+                a.listorder > b.listorder
+              })
             }
             if (this.select_field.indexOf(item.field) > -1) {
               this.select_arr.push(item)
@@ -179,9 +166,47 @@ export default {
         }
       })
     },
+    // 格式化规则
+    formatRules(file_arr) {
+      if (file_arr.length > 0) {
+        const obj = {}
+        file_arr.map(item => {
+          let trigger = 'blur'
+          if (item.type === 'radio' || item.type === 'checkbox' || item.type === 'select') {
+            trigger = 'change'
+          }
+          const rule_info = {
+            required: item.required === 1,
+            message: item.errormsg || validateMessages[item.pattern] || '该值不能为空',
+            trigger
+          }
+          if (item.pattern && valideRules[item.pattern]) {
+            Object.assign(rule_info, { pattern: (valideRules[item.pattern])() })
+          }
+          obj[item.field] = [rule_info]
+          if (item.type === 'text' || item.type === 'varchar' || item.type === 'title' || item.type === 'textarea') {
+            if (item.maxlength > 0 && item.maxlength > item.minlength) {
+              obj[item.field].push({
+                min: item.minlength,
+                max: item.maxlength,
+                message: item.errormsg || validateMessages[item.pattern] || '该值不能为空',
+                trigger
+              })
+            }
+          }
+        })
+        return obj
+      }
+      return {}
+    },
     // 查询
     selectBtn() {
       console.log(this.postForm)
+      Object.keys(this.postForm).map(key => {
+        if (this.postForm[key] === '') {
+          delete this.postForm[key]
+        }
+      })
       this.listQuery.page = 1
       this.fetchContentList(this.postForm)
     },
@@ -199,13 +224,12 @@ export default {
       this.$refs['dataForm'].validate((valid) => {
         if (valid) {
           const form = Object.assign({}, { moduleid: this.moduleid, catid: this.catid }, this.temp)
-          console.log(form)
           createContent(form).then(() => {
             this.list.unshift(this.temp)
             this.dialogFormVisible = false
             this.$notify({
-              title: 'Success',
-              message: 'Created Successfully',
+              title: '成功',
+              message: '创建内容成功!',
               type: 'success',
               duration: 2000
             })
@@ -293,13 +317,10 @@ export default {
       this.downloadLoading = true
       jsonToExcel.then(excel => {
         const tHeader = []
-        for (let i = 0; i < this.field_arr.length; i++) {
-          if (this.display_field.indexOf(this.field_arr[i].field) > -1) {
-            tHeader.push(this.field_arr[i].name)
-          }
+        for (let i = 0; i < this.display_arr.length; i++) {
+          tHeader.push(this.display_arr[i].name)
         }
-        const filterVal = this.display_field
-        const data = this.formatJson(filterVal, this.list)
+        const data = this.formatJson(this.display_arr, this.list)
         excel.export_json_to_excel({
           header: tHeader,
           data,
@@ -308,13 +329,25 @@ export default {
         this.downloadLoading = false
       })
     },
-    // 格式化时间
-    formatJson(filterVal, jsonData) {
-      return jsonData.map(v => filterVal.map(j => {
-        if (j === 'timestamp') {
-          return parseTime(v[j])
+    // 过滤数组值
+    filter_arr: function(value, arr) {
+      let str = ''
+      arr.map(item => {
+        if (item.value === value) {
+          str = item.name
+        }
+      })
+      return str
+    },
+    // 格式化数据处理
+    formatJson(filter_arr, jsonData) {
+      return jsonData.map(v => filter_arr.map(j => {
+        if (j.field === 'createtime') {
+          return parseTime(v[j.field])
+        } else if (j.type === 'radio' || j.type === 'checkbox' || j.type === 'select') {
+          return this.filter_arr(v[j.field], this.filterSelectOptions(j.setup))
         } else {
-          return v[j]
+          return v[j.field]
         }
       }))
     }

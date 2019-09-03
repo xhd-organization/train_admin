@@ -130,25 +130,23 @@
       </el-form-item>
       <el-form-item label="验证规则">
         <el-select v-model="form.pattern" placeholder="验证规则类型">
-          <el-option value="pattern_email" label="电子邮件地址" />
-          <el-option value="pattern_url" label="网址" />
-          <el-option value="pattern_date" label="日期" />
-          <el-option value="pattern_number" label="有效的数值" />
-          <el-option value="pattern_digits" label="数字" />
-          <el-option value="pattern_creditcard" label="信用卡号码" />
-          <el-option value="pattern_equalTo" label="再次输入相同的值" />
-          <el-option value="pattern_ip4" label="IP地址" />
-          <el-option value="pattern_mobile" label="手机号码" />
-          <el-option value="pattern_zipcode" label="邮编" />
-          <el-option value="pattern_qq" label="QQ号码" />
-          <el-option value="pattern_idcard" label="身份证号" />
-          <el-option value="pattern_chinese" label="中文字符" />
-          <el-option value="pattern_cn_username" label="中文英文和数字和下划线" />
-          <el-option value="pattern_tel" label="电话号码" />
-          <el-option value="pattern_english" label="英文" />
-          <el-option value="pattern_en_num" label="英文和数字和下划线" />
-          <el-option value="field_post" label="在前台投稿中显示" />
-          <el-option value="field_unpost_group" label="禁止设置字段值的会员组" />
+          <el-option value="email" label="电子邮件地址" />
+          <el-option value="url" label="网址" />
+          <el-option value="date" label="日期" />
+          <el-option value="number" label="有效的数值" />
+          <el-option value="digits" label="数字" />
+          <el-option value="creditcard" label="信用卡号码" />
+          <el-option value="equalTo" label="再次输入相同的值" />
+          <el-option value="ip4" label="IP地址" />
+          <el-option value="mobile" label="手机号码" />
+          <el-option value="zipcode" label="邮编" />
+          <el-option value="qq" label="QQ号码" />
+          <el-option value="idcard" label="身份证号" />
+          <el-option value="chinese" label="中文字符" />
+          <el-option value="cn_username" label="中文英文和数字和下划线" />
+          <el-option value="tel" label="电话号码" />
+          <el-option value="english" label="英文" />
+          <el-option value="en_num" label="英文和数字和下划线" />
         </el-select>
       </el-form-item>
       <!--
@@ -226,7 +224,7 @@ export default {
       fieldid: this.$route.params.fieldid,
       rules: {
         name: [
-          { required: true, message: '请输入字段名', trigger: 'blur' },
+          { required: true, message: '请输入字段别名', trigger: 'blur' },
           { min: 2, max: 30, message: '长度在 3 到 30 个字符', trigger: 'blur' }
         ],
         field: [
