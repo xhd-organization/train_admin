@@ -22,6 +22,7 @@
         <el-radio-group v-model="postForm.emptytable">
           <el-radio label="1">空表字段</el-radio>
           <el-radio label="0">普通数据列表字段</el-radio>
+          <el-radio label="2">树形结构字段</el-radio>
         </el-radio-group>
       </el-form-item>
       <el-form-item>
@@ -52,25 +53,13 @@ export default {
     }
   },
   data() {
-    const validateRequire = (rule, value, callback) => {
-      if (value === '') {
-        this.$message({
-          message: rule.field + '为必传项',
-          type: 'error'
-        })
-        callback(new Error(rule.field + '为必传项'))
-      } else {
-        callback()
-      }
-    }
     return {
       postForm: Object.assign({}, defaultForm),
       loading: false,
       rules: {
         name: { required: true, message: '请输入模型表名', trigger: 'blur' },
-        names: { required: true, message: '请输入模型名称', trigger: 'blur' },
-        tableName: { required: true, message: '请输入模型表名', trigger: 'blur' },
-        title: [{ validator: validateRequire }]
+        title: { required: true, message: '请输入模型名称', trigger: 'blur' },
+        tableName: { required: true, message: '请输入模型表名', trigger: 'blur' }
       },
       tempRoute: {}
     }
@@ -107,12 +96,12 @@ export default {
     },
     setTagsViewTitle() {
       const title = '编辑模型'
-      const route = Object.assign({}, this.tempRoute, { title: `${title}-${this.postForm.names}` })
+      const route = Object.assign({}, this.tempRoute, { title: `${title}-${this.postForm.title}` })
       this.$store.dispatch('tagsView/updateVisitedView', route)
     },
     setPageTitle() {
       const title = '编辑模型'
-      document.title = `${title} - ${this.postForm.names}`
+      document.title = `${title} - ${this.postForm.title}`
     },
     async submitForm() {
       console.log(this.postForm)

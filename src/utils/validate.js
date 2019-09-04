@@ -142,48 +142,48 @@ export const valideRules = {
 
   // http://docs.jquery.com/Plugins/Validation/Methods/dateISO
   dateISO: function(value) {
-    return /^\d{4}[\/-]\d{1,2}[\/-]\d{1,2}$/.test(value)
+    return /^\d{4}[\/-]\d{1,2}[\/-]\d{1,2}$/
   },
 
   // http://docs.jquery.com/Plugins/Validation/Methods/number
   number: function(value) {
-    return /^-?(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d+)?$/.test(value)
+    return /^-?(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d+)?$/
   },
 
   english: function(value) {
-    return /^[a-z_A-Z]+$/.test(value)
+    return /^[a-z_A-Z]+$/
   },
   en_num: function(value) {
-    return /^\w+$/.test(value)
+    return /^\w+$/
   },
   ip4: function(value) {
-    return /^\d+\.\d+\.\d+\.\d+$/.test(value)
+    return /^\d+\.\d+\.\d+\.\d+$/
   },
   mobile: function(value) {
-    return /^[0-9]{11}$/.test(value)
+    return /^[0-9]{11}$/
   },
   zipcode: function(value) {
-    return /^\d{6}$/.test(value)
+    return /^\d{6}$/
   },
   qq: function(value) {
-    return /^\d{5,}$/.test(value)
+    return /^\d{5,}$/
   },
   idcard: function(value) {
-    return /^[1-9]([0-9]{14}|[0-9]{17})$/.test(value)
+    return /^[1-9]([0-9]{14}|[0-9]{17})$/
   },
   chinese: function(value) {
-    return /^[\u4e00-\u9fa5]+$/.test(value)
+    return /^[\u4e00-\u9fa5]+$/
   },
   cn_username: function(value) {
-    return /^([\u4e00-\u9fa5]|[\w])+$/.test(value)
+    return /^([\u4e00-\u9fa5]|[\w])+$/
   },
   tel: function(value) {
-    return /^[+]{0,1}(\d){1,4}[ ]{0,1}([-]{0,1}((\d)|[ ]){1,12})+$/.test(value)
+    return /^[+]{0,1}(\d){1,4}[ ]{0,1}([-]{0,1}((\d)|[ ]){1,12})+$/
   },
 
   // http://docs.jquery.com/Plugins/Validation/Methods/digits
   digits: function(value) {
-    return /^\d+$/.test(value)
+    return /^\d+$/
   },
 
   // http://docs.jquery.com/Plugins/Validation/Methods/creditcard

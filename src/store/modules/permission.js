@@ -35,7 +35,8 @@ function get_router(bcid, data, level = 0) {
           id: subitem.id,
           pagesize: subitem.pagesize,
           listfields: subitem.listfields,
-          selectfields: subitem.selectfields
+          selectfields: subitem.selectfields,
+          is_tree: subitem.type === '2'
         }
         item['children'][idx]['component'] = () => import('@/views/content/index')
         item['children'][idx]['name'] = titleCase5(subitem.path) + titleCase5(item.path)
@@ -51,7 +52,8 @@ function get_router(bcid, data, level = 0) {
         id: item.id,
         pagesize: item.pagesize,
         listfields: item.listfields,
-        selectfields: item.selectfields
+        selectfields: item.selectfields,
+        is_tree: item.type === '2'
       }
       item['component'] = Layout
       if (item.hasChildren) {
@@ -69,7 +71,8 @@ function get_router(bcid, data, level = 0) {
             id: item.id,
             pagesize: item.pagesize,
             listfields: item.listfields,
-            selectfields: item.selectfields
+            selectfields: item.selectfields,
+            is_tree: item.type === '2'
           }
         }]
       }

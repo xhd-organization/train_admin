@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <el-form ref="postForm" :model="postForm" class="filter-container form-container">
+    <el-form v-if="!is_tree" ref="postForm" :model="postForm" class="filter-container form-container">
       <div v-for="field in select_arr" :key="field.id" class="select-item">
         <el-input v-if="field.type === 'title' || field.type === 'text' || field.type === 'catid' || field.type === 'varchar'" v-model="postForm[field.field]" :placeholder="field.name" style="width: 200px;" class="filter-item" @keyup.enter.native="selectBtn" />
         <el-select v-if="field.type === 'radio' || field.type === 'checkbox' || field.type === 'select'" v-model="postForm[field.field]" :placeholder="field.name" clearable class="filter-item">
@@ -8,13 +8,13 @@
         </el-select>
         <el-date-picker v-if="field.type === 'datetime'" v-model="postForm[field.field]" type="datetime" format="yyyy-MM-dd HH:mm:ss" :placeholder="field.name" />
       </div>
-      <el-button v-if="select_arr.length > 0" v-waves class="filter-item" type="primary" icon="el-icon-search" @click="selectBtn">
+      <el-button v-if="select_arr.length > 0 && !is_tree" v-waves class="filter-item" type="primary" icon="el-icon-search" @click="selectBtn">
         查询
       </el-button>
-      <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="handleCreate">
+      <el-button v-if="is_tree" class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="handleCreate">
         添加
       </el-button>
-      <el-button v-waves :loading="downloadLoading" class="filter-item" type="primary" icon="el-icon-download" @click="handleDownload">
+      <el-button v-if="!is_tree" v-waves :loading="downloadLoading" class="filter-item" type="primary" icon="el-icon-download" @click="handleDownload">
         导出
       </el-button>
     </el-form>
@@ -34,12 +34,13 @@
       </el-table-column>
       <el-table-column label="操作" align="center" width="300" class-name="small-padding fixed-width">
         <template slot-scope="scope">
+          <el-button v-if="is_tree" type="primary" size="small" @click="handleUpdate(scope.row)">添加子项</el-button>
           <el-button type="primary" size="mini" @click="handleUpdate(scope.row)">编辑</el-button>
           <el-button v-if="scope.row.status!='deleted'" size="mini" type="danger" @click="deleteBtn(scope.$index, scope.row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
-    <pagination v-show="total > 0" :total="total" :page.sync="listQuery.page" :limit.sync="listQuery.limit" @pagination="fetchContentList" />
+    <pagination v-show="total > 0 && !is_tree" :total="total" :page.sync="listQuery.page" :limit.sync="listQuery.limit" @pagination="fetchContentList" />
     <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
       <el-form ref="dataForm" :rules="rules" :model="temp" label-position="left" label-width="100px" style="width: 400px; margin-left:50px;">
         <el-form-item v-for="field in field_arr" :key="field.id" :label="field.name" :prop="field.field" :required="field.required ===1">
@@ -105,6 +106,7 @@ export default {
         sort: '+id'
       },
       catid: this.$route.meta.id, // 栏目id
+      is_tree: this.$route.meta.is_tree, // 是否为树形结构
       moduleid: this.$route.meta.moduleid, // 模型id
       display_field: this.$route.meta.listfields ? this.$route.meta.listfields.split(',') : [], // 需要显示的字段
       display_arr: [], // 显示字段
@@ -151,7 +153,6 @@ export default {
           })
           this.temp_base = Object.assign({}, this.temp)
           this.rules = this.formatRules(data)
-          console.log(this.rules)
           data.map(item => {
             if (this.display_field.indexOf(item.field) > -1) {
               this.display_arr.push(item)
@@ -212,7 +213,7 @@ export default {
     },
     // 创建操作
     handleCreate() {
-      this.temp = this.temp_base // 重置模板数据
+      this.temp = Object.assign({}, this.temp_base) // 重置模板数据
       this.dialogStatus = 'create'
       this.dialogFormVisible = true
       this.$nextTick(() => {
@@ -224,9 +225,11 @@ export default {
       this.$refs['dataForm'].validate((valid) => {
         if (valid) {
           const form = Object.assign({}, { moduleid: this.moduleid, catid: this.catid }, this.temp)
-          createContent(form).then(() => {
-            this.list.unshift(this.temp)
+          createContent(form).then((data) => {
+            var obj = Object.assign({}, this.temp, { id: data })
+            this.list.unshift(obj)
             this.dialogFormVisible = false
+            this.total = this.total + 1
             this.$notify({
               title: '成功',
               message: '创建内容成功!',
@@ -289,6 +292,7 @@ export default {
             duration: 2000
           })
           const index = this.list.indexOf(row)
+          this.total = this.total - 1
           this.list.splice(index, 1)
         })
       }).catch((err) => {

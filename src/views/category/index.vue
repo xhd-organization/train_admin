@@ -40,10 +40,10 @@
           <el-button type="primary" size="small" @click="addChild(scope.row)">
             添加子栏目
           </el-button>
-          <el-button type="primary" size="mini" @click="fieldEdit(scope.row)">
+          <el-button type="primary" size="small" @click="fieldEdit(scope.row)">
             修改
           </el-button>
-          <el-button size="mini" type="danger" @click="deleteBtn(scope.$index, scope.row)">
+          <el-button size="small" type="danger" @click="deleteBtn(scope.$index, scope.row)">
             删除
           </el-button>
         </template>

@@ -21,7 +21,7 @@
         </el-table-column>
         <el-table-column label="模型名称" align="center">
           <template slot-scope="scope">
-            <span>{{ scope.row.names ? scope.row.names : scope.row.title }}</span>
+            <span>{{ scope.row.title }}</span>
           </template>
         </el-table-column>
         <el-table-column v-if="is_admin" label="操作" align="center" width="260" class-name="small-padding fixed-width">
@@ -50,8 +50,8 @@
           <el-form-item label="Date" prop="timestamp">
             <el-date-picker v-model="temp.timestamp" type="datetime" placeholder="Please pick a date" />
           </el-form-item>
-          <el-form-item label="模型名称" prop="names">
-            <el-input v-model="temp.names" />
+          <el-form-item label="模型名称" prop="name">
+            <el-input v-model="temp.name" />
           </el-form-item>
           <el-form-item label="Remark">
             <el-input v-model="temp.remark" :autosize="{ minRows: 2, maxRows: 4}" type="textarea" placeholder="Please input" />
@@ -112,7 +112,7 @@ export default {
       listQuery: {
         page: 1,
         limit: 20,
-        names: ''
+        name: ''
       },
       showReviewer: false,
       dialogFormVisible: false,
@@ -125,7 +125,7 @@ export default {
         id: undefined,
         remark: '',
         timestamp: new Date(),
-        names: '',
+        name: '',
         type: '',
         status: 'published'
       },
@@ -135,7 +135,7 @@ export default {
       rules: {
         type: [{ required: true, message: 'type is required', trigger: 'change' }],
         timestamp: [{ type: 'date', required: true, message: 'timestamp is required', trigger: 'change' }],
-        names: [{ required: true, message: 'title is required', trigger: 'blur' }]
+        name: [{ required: true, message: 'title is required', trigger: 'blur' }]
       }
     }
   },
