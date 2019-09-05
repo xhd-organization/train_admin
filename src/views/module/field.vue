@@ -86,7 +86,7 @@ export default {
   },
   methods: {
     getModuleField(moduleid) {
-      fetchModuleFieldList({ moduleid }).then(data => {
+      fetchModuleFieldList({ moduleid, is_field: true }).then(data => {
         this.field_arr = data
         this.listLoading = false
         this.$nextTick(() => {

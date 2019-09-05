@@ -2,7 +2,7 @@
   <div class="app-container">
     <el-form ref="form" :model="form" :rules="rules" label-width="170px">
       <el-form-item label="字段类型" prop="type">
-        <el-select v-model="form.type" placeholder="字段类型" :disabled="isEdit">
+        <el-select v-model="form.type" placeholder="字段类型" :disabled="isEdit" @change="changeType">
           <el-option value="catid" label="栏目" />
           <el-option value="title" label="标题" />
           <el-option value="typeid" label="类别" />
@@ -19,6 +19,7 @@
           <el-option value="number" label="数字" />
           <el-option value="datetime" label="日期和时间" />
           <el-option value="linkage" label="联动菜单" />
+          <el-option value="source" label="数据源" />
         </el-select>
       </el-form-item>
       <el-form-item label="字段名" prop="field">
@@ -30,7 +31,7 @@
       <el-form-item v-if="!setup_filter(form.type)" label="字段相关设置">
         <el-row v-if="form.type === 'title'" :gutter="20" type="flex" justify="start">
           <el-col :span="4" class="align">是否使用标题样式标题样式</el-col>
-          <el-col :span="3">
+          <el-col :span="4">
             <el-radio-group v-model="form.setup['style']">
               <el-radio :label="1">是</el-radio>
               <el-radio :label="0">否</el-radio>
@@ -59,9 +60,9 @@
           </el-col>
           <el-col v-if="form.setup['fieldtype'] === 'tinyint' || form.setup['fieldtype'] === 'smallint' || form.setup['fieldtype'] === 'mediumint' || form.setup['fieldtype'] === 'int'" :span="4" class="align"><el-checkbox v-model="form.setup['numbertype']" label="1" checked>不包括负数</el-checkbox></el-col>
         </el-row>
-        <el-row v-if="form.type === 'typeid'" :gutter="20" type="flex" justify="start">
-          <el-col :span="4" class="align">选项类型</el-col>
-          <el-col :span="8">
+        <el-row v-if="form.type === 'typeid' || form.type === 'source'" :gutter="20" type="flex" justify="start">
+          <el-col :span="5" class="align">选项类型</el-col>
+          <el-col :span="10">
             <el-radio-group v-model="form.setup['inputtype']">
               <el-radio label="checkbox">复选框</el-radio>
               <el-radio label="select">下拉列表框</el-radio>
@@ -70,7 +71,7 @@
           </el-col>
         </el-row>
         <el-row v-if="form.type === 'typeid' || form.type === 'select' || form.type === 'textarea'" :gutter="20" type="flex" justify="start">
-          <el-col :span="4" class="align">字段类型</el-col>
+          <el-col :span="5" class="align">字段类型</el-col>
           <el-col :span="4">
             <el-select v-model="form.setup['fieldtype']" placeholder="字段类型">
               <el-option v-if="form.type === 'typeid' || form.type === 'select' || form.type === 'radio' || form.type === 'checkbox'" value="varchar" label="字符 VARCHAR" />
@@ -99,13 +100,21 @@
             </el-radio-group>
           </el-col>
         </el-row>
-        <el-row v-if="form.type === 'typeid' || form.type === 'radio' || form.type === 'checkbox'" :gutter="20" type="flex" justify="start">
-          <el-col :span="4" class="align">{{ form.type === 'typeid' ? '复选框或单选框的宽度' : '宽度' }}</el-col>
+        <el-row v-if="form.type === 'typeid' || form.type === 'radio' || form.type === 'checkbox' || form.type === 'source'" :gutter="20" type="flex" justify="start">
+          <el-col :span="5" class="align">{{ form.type === 'typeid' || form.type === 'source' ? '复选框或单选框的宽度' : '宽度' }}</el-col>
           <el-col :span="3"><el-input v-model="form.setup['labelwidth']" /></el-col>
         </el-row>
         <el-row v-if="form.type === 'typeid'" :gutter="20" type="flex" justify="start">
-          <el-col :span="4" class="align">顶级类别ID</el-col>
+          <el-col :span="5" class="align">顶级类别ID</el-col>
           <el-col :span="3"><el-input v-model="form.setup['default']" /></el-col>
+        </el-row>
+        <el-row v-if="form.type === 'source'" :gutter="20" type="flex" justify="start">
+          <el-col :span="5" class="align">数据来源</el-col>
+          <el-col :span="4">
+            <el-select v-model="form.setup['sourceid']" placeholder="请选择数据来源" popper-class="category-select">
+              <el-option v-for="source in source_arr" :key="source.id" :class="source.is_last === true ? `last-child level${source.level}` : source.level > 0 ? `child level${source.level}` : ''" :value="source.id" :label="source.name" :disabled="source.hasChildren" />
+            </el-select>
+          </el-col>
         </el-row>
         <el-row v-if="form.type === 'text' || form.type === 'textarea' || form.type === 'editor' || form.type === 'select' || form.type === 'number'" :gutter="20" type="flex" justify="start">
           <el-col :span="4" class="align">默认值</el-col>
@@ -191,6 +200,7 @@
 </template>
 <script>
 import { fetchModuleFieldDetail, createModuleField, updateModuleField } from '@/api/module'
+import { fetchCategoryList } from '@/api/category'
 const filter_setup = ['catid', 'createtime', 'linkage', 'groupid']
 export default {
   props: {
@@ -222,6 +232,7 @@ export default {
 
       moduleid: this.$route.params.moduleid,
       fieldid: this.$route.params.fieldid,
+      source_arr: [], // 数据源列表
       rules: {
         name: [
           { required: true, message: '请输入字段别名', trigger: 'blur' },
@@ -277,6 +288,7 @@ export default {
         this.form.oldfield = data.field
       })
     },
+    // 提交字段数据
     submitForm(formName) {
       this.$refs[formName].validate((valid) => {
         if (valid) {
@@ -323,6 +335,22 @@ export default {
         }
       })
     },
+    // 改变类型
+    changeType(type) {
+      console.log(type)
+      if (type === 'source') {
+        this.getDataSource()
+      }
+    },
+    // 获取数据源列表
+    getDataSource() {
+      fetchCategoryList().then(data => {
+        if (data instanceof Array && data.length > 0) {
+          this.source_arr = this.get_tree(0, data)
+          console.log(this.source_arr)
+        }
+      })
+    },
     toLastView(visitedViews, view) {
       const latestView = visitedViews.slice(-1)[0]
       if (latestView) {
@@ -343,6 +371,32 @@ export default {
         return true
       }
       return false
+    },
+    get_tree(bcid, data, level = 0) {
+      let category_arr = []
+      data.map((item, index) => {
+        const str_arr = this.getChild(item.id, data, (item.level ? item.level : 0))
+        if (item.parentid === bcid) {
+          category_arr.push(item)
+        }
+        if (str_arr.length > 0) {
+          str_arr[str_arr.length - 1]['is_last'] = true
+          category_arr = category_arr.concat(str_arr)
+          item['hasChildren'] = true
+        } else {
+          item['hasChildren'] = false
+        }
+      })
+      return category_arr
+    },
+    getChild(bcid, arr, level) {
+      const arr_str = arr.filter(item => {
+        if (item.parentid === bcid) {
+          item['level'] = level + 1
+          return true
+        }
+      })
+      return arr_str
     }
   }
 }
@@ -356,5 +410,37 @@ export default {
     &:last-child {
       margin-bottom: 0;
     }
+  }
+</style>
+<style type="text/css">
+  .category-select span{
+    position: relative;
+  }
+  .category-select .child span, .category-select .last-child span{
+    padding-left: 15px;
+    margin-left: 10px;
+  }
+  .category-select .child span:before{
+    content: '├';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+  }
+  .category-select .last-child span:before{
+    content: '└';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    padding-top: 5px;
+    box-sizing: border-box;
+  }
+  .category-select .level2{
+    margin-left: 20px;
   }
 </style>

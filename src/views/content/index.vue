@@ -11,7 +11,7 @@
       <el-button v-if="select_arr.length > 0 && !is_tree" v-waves class="filter-item" type="primary" icon="el-icon-search" @click="selectBtn">
         查询
       </el-button>
-      <el-button v-if="is_tree" class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="handleCreate">
+      <el-button v-if="!is_tree" class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="handleCreate">
         添加
       </el-button>
       <el-button v-if="!is_tree" v-waves :loading="downloadLoading" class="filter-item" type="primary" icon="el-icon-download" @click="handleDownload">
@@ -99,11 +99,7 @@ export default {
       listLoading: true,
       listQuery: {
         page: 1,
-        limit: 20,
-        importance: undefined,
-        title: undefined,
-        type: undefined,
-        sort: '+id'
+        limit: 20
       },
       catid: this.$route.meta.id, // 栏目id
       is_tree: this.$route.meta.is_tree, // 是否为树形结构

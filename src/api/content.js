@@ -31,3 +31,11 @@ export function deleteContent(data) {
     data
   })
 }
+
+export function getDataSource(query) {
+  return request({
+    url: '/datasource',
+    method: 'get',
+    params: query
+  })
+}
