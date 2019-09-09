@@ -114,6 +114,23 @@
             <el-select v-model="form.setup['sourceid']" placeholder="请选择数据来源" popper-class="category-select" @change="changeSource">
               <el-option v-for="source in source_arr" :key="source.id" :class="source.is_last === true ? `last-child level${source.level}` : source.level > 1 ? `child level${source.level}` : ''" :value="source.id" :label="source.name" :disabled="source.hasChildren" />
             </el-select>
+            <el-input v-model="form.setup['source_moduleid']" style="display: none;" />
+          </el-col>
+        </el-row>
+        <el-row v-if="form.setup['sourceid']" :gutter="20" type="flex" justify="start">
+          <el-col :span="5" class="align">数据选项名称</el-col>
+          <el-col :span="19">
+            <el-radio-group v-model="form.setup['source_name']">
+              <el-radio v-for="source_field in source_field_arr" :key="source_field.id" :label="source_field.field">{{ source_field.name }}</el-radio>
+            </el-radio-group>
+          </el-col>
+        </el-row>
+        <el-row v-if="form.setup['sourceid']" :gutter="20" type="flex" justify="start">
+          <el-col :span="5" class="align">数据选项值</el-col>
+          <el-col :span="19">
+            <el-radio-group v-model="form.setup['source_value']">
+              <el-radio v-for="source_field in source_field_arr" :key="source_field.id" :label="source_field.field">{{ source_field.name }}</el-radio>
+            </el-radio-group>
           </el-col>
         </el-row>
         <el-row v-if="form.type === 'text' || form.type === 'textarea' || form.type === 'editor' || form.type === 'select' || form.type === 'number'" :gutter="20" type="flex" justify="start">
@@ -199,7 +216,7 @@
   </div>
 </template>
 <script>
-import { fetchModuleFieldDetail, createModuleField, updateModuleField } from '@/api/module'
+import { fetchModuleFieldDetail, createModuleField, updateModuleField, fetchModuleFieldList } from '@/api/module'
 import { fetchCategoryList } from '@/api/category'
 const filter_setup = ['catid', 'createtime', 'linkage', 'groupid']
 export default {
@@ -229,10 +246,11 @@ export default {
         type: '',
         status: 0
       },
-
       moduleid: this.$route.params.moduleid,
       fieldid: this.$route.params.fieldid,
       source_arr: [], // 数据源列表
+      source_field_arr: [], // 数据源字段列表
+      source_moduleid: '', // 数据源模型id
       rules: {
         name: [
           { required: true, message: '请输入字段别名', trigger: 'blur' },
@@ -325,9 +343,11 @@ export default {
         }
       })
     },
+    // 重置
     resetForm(formName) {
       this.$refs[formName].resetFields()
     },
+    // 取消
     cancelForm() {
       this.$store.dispatch('tagsView/delView', this.$route).then(({ visitedViews }) => {
         if (this.isActive(this.$route)) {
@@ -337,9 +357,10 @@ export default {
     },
     // 改变类型
     changeType(type) {
-      console.log(type)
       if (type === 'source') {
-        this.getDataSource()
+        if (this.source_arr.length === 0) {
+          this.getDataSource()
+        }
         this.$set(this.form.setup, 'inputtype', 'select')
       }
     },
@@ -354,6 +375,18 @@ export default {
     // 改变数据源回调
     changeSource(id) {
       console.log(id)
+      this.source_arr.map(item => {
+        if (item.id === id) {
+          this.fetchModuleFieldList(item.moduleid)
+        }
+      })
+    },
+    // 获取模型字段列表
+    fetchModuleFieldList(moduleid) {
+      fetchModuleFieldList({ moduleid, is_field: true }).then(data => {
+        this.source_field_arr = data
+        this.source_moduleid = moduleid
+      })
     },
     toLastView(visitedViews, view) {
       const latestView = visitedViews.slice(-1)[0]

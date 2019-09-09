@@ -29,6 +29,7 @@
       <el-table-column v-for="field in display_arr" :key="field.id" :label="field.name" :prop="field.field" align="center">
         <template slot-scope="scope">
           <span v-if="field.type === 'radio' || field.type === 'checkbox' || field.type === 'select'">{{ scope.row[field.field] | formatFieldName(field.setup) }}</span>
+          <span v-else-if="field.type === 'datetime'">{{ scope.row[field.field] | formatTime() }}</span>
           <span v-else>{{ scope.row[field.field] }}</span>
         </template>
       </el-table-column>
@@ -48,6 +49,9 @@
           <el-select v-if="field.type === 'radio' || field.type === 'checkbox' || field.type === 'groupid' || field.type === 'select'" v-model="temp[field.field]" :placeholder="field.name" class="filter-item">
             <el-option v-for="item in filterSelectOptions(field.setup)" :key="item.key" :label="item.name" :value="item.value" />
           </el-select>
+          <el-select v-if="field.type === 'source'" v-model="temp[field.field]" :placeholder="field.name" class="filter-item">
+            <el-option v-for="item in source_info[field.field]" :key="item.key" :label="item.name" :value="item.value" />
+          </el-select>
           <el-date-picker v-if="field.type === 'datetime'" v-model="temp[field.field]" type="datetime" format="yyyy-MM-dd HH:mm:ss" :placeholder="field.name" />
         </el-form-item>
       </el-form>
@@ -64,7 +68,7 @@ import { fetchModuleFieldList } from '@/api/module'
 
 import waves from '@/directive/waves' // waves directive
 
-import { parseTime } from '@/utils'
+import { parseTime, formatTime } from '@/utils'
 import { validateMessages, valideRules } from '@/utils/validate'
 const jsonToExcel = import('@/vendor/Export2Excel')
 
@@ -89,6 +93,12 @@ export default {
         }
       }
       return value
+    },
+    parseTime(value) {
+      if (value) {
+        return formatTime(value, 'y-m-d h:i:s')
+      }
+      return value
     }
   },
   data() {
@@ -109,6 +119,7 @@ export default {
       field_arr: [], // 字段列表
       select_field: this.$route.meta.selectfields ? this.$route.meta.selectfields.split(',') : [], // 需要查询的字段
       select_arr: [], // 查询列表
+      source_info: {}, // 数据源对象
       postForm: {}, // 查询表单数据
       temp: {}, // 编辑框表单数据对象
       temp_base: {}, // 编辑框表单数据对象基础模板
@@ -158,6 +169,11 @@ export default {
             }
             if (this.select_field.indexOf(item.field) > -1) {
               this.select_arr.push(item)
+            }
+            if (item.type === 'source') {
+              this.filtersSourceOptions(item.setup).then(data => {
+                this.source_info[item.field] = data
+              })
             }
           })
         }
@@ -306,6 +322,30 @@ export default {
               name: item.split('|')[0],
               value: item.split('|')[1].toString()
             }
+          })
+          return arr
+        }
+      }
+      return []
+    },
+    // 过滤处理数据源信息
+    async filtersSourceOptions(options) {
+      if (options) {
+        const info = JSON.parse(options)
+        const sourceid = info.sourceid
+        const source_name = info.source_name
+        const source_value = info.source_value
+        const source_moduleid = info.source_moduleid
+        let form = { catid: sourceid, moduleid: source_moduleid }
+        if (info) {
+          form = Object.assign({}, form)
+        }
+        const list = await fetchContentList(form)
+        if (list.total > 0) {
+          const arr = list.items.map(item => {
+            item['name'] = item[source_name]
+            item['value'] = item[source_value]
+            return item
           })
           return arr
         }
