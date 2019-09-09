@@ -8,7 +8,7 @@
       </el-form-item>
       <el-form-item label="上级栏目" class="postInfo-container-item" prop="parentid">
         <el-select v-model="postForm.parentid" popper-class="category-select">
-          <el-option v-for="item in category_arr" :key="item.id" :class="item.is_last === true ? `last-child level${item.level}` : item.level > 0 ? `child level${item.level}` : ''" :value="item.id" :label="item.name" />
+          <el-option v-for="item in category_arr" :key="item.id" :class="item.is_last === true ? `last-child level${item.level}` : item.level > 1 ? `child level${item.level}` : ''" :value="item.id" :label="item.name" />
         </el-select>
       </el-form-item>
       <el-form-item label="栏目名称:" class="postInfo-container-item" prop="name">
@@ -239,19 +239,22 @@ export default {
     },
     get_tree(bcid, data, level = 0) {
       let category_arr = []
-      data.map((item, index) => {
-        const str_arr = this.getChild(item.id, data, (item.level ? item.level : 0))
-        if (item.parentid === bcid) {
-          category_arr.push(item)
-        }
-        if (str_arr.length > 0) {
+      const str_arr = this.getChild(bcid, data, (level || 0))
+      if (str_arr.length > 0) {
+        if (bcid !== 0) {
           str_arr[str_arr.length - 1]['is_last'] = true
-          category_arr = category_arr.concat(str_arr)
-          item['hasChildren'] = true
-        } else {
-          item['hasChildren'] = false
         }
-      })
+        str_arr.map((item, index) => {
+          category_arr.push(item)
+          const child_arr = this.get_tree(item.id, data, (item.level ? item.level : 0))
+          if (child_arr.length > 0) {
+            item['hasChildren'] = true
+            category_arr = category_arr.concat(child_arr)
+          } else {
+            item['hasChildren'] = false
+          }
+        })
+      }
       return category_arr
     },
     getChild(bcid, arr, level) {
@@ -319,6 +322,9 @@ export default {
   }
   .category-select .level2{
     margin-left: 20px;
+  }
+    .category-select .level3{
+    margin-left: 40px;
   }
 </style>
 <style type="text/css" scoped="">

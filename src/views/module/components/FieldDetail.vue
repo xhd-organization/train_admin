@@ -111,8 +111,8 @@
         <el-row v-if="form.type === 'source'" :gutter="20" type="flex" justify="start">
           <el-col :span="5" class="align">数据来源</el-col>
           <el-col :span="4">
-            <el-select v-model="form.setup['sourceid']" placeholder="请选择数据来源" popper-class="category-select">
-              <el-option v-for="source in source_arr" :key="source.id" :class="source.is_last === true ? `last-child level${source.level}` : source.level > 0 ? `child level${source.level}` : ''" :value="source.id" :label="source.name" :disabled="source.hasChildren" />
+            <el-select v-model="form.setup['sourceid']" placeholder="请选择数据来源" popper-class="category-select" @change="changeSource">
+              <el-option v-for="source in source_arr" :key="source.id" :class="source.is_last === true ? `last-child level${source.level}` : source.level > 1 ? `child level${source.level}` : ''" :value="source.id" :label="source.name" :disabled="source.hasChildren" />
             </el-select>
           </el-col>
         </el-row>
@@ -340,6 +340,7 @@ export default {
       console.log(type)
       if (type === 'source') {
         this.getDataSource()
+        this.$set(this.form.setup, 'inputtype', 'select')
       }
     },
     // 获取数据源列表
@@ -347,9 +348,12 @@ export default {
       fetchCategoryList().then(data => {
         if (data instanceof Array && data.length > 0) {
           this.source_arr = this.get_tree(0, data)
-          console.log(this.source_arr)
         }
       })
+    },
+    // 改变数据源回调
+    changeSource(id) {
+      console.log(id)
     },
     toLastView(visitedViews, view) {
       const latestView = visitedViews.slice(-1)[0]
@@ -374,19 +378,22 @@ export default {
     },
     get_tree(bcid, data, level = 0) {
       let category_arr = []
-      data.map((item, index) => {
-        const str_arr = this.getChild(item.id, data, (item.level ? item.level : 0))
-        if (item.parentid === bcid) {
-          category_arr.push(item)
-        }
-        if (str_arr.length > 0) {
+      const str_arr = this.getChild(bcid, data, (level || 0))
+      if (str_arr.length > 0) {
+        if (bcid !== 0) {
           str_arr[str_arr.length - 1]['is_last'] = true
-          category_arr = category_arr.concat(str_arr)
-          item['hasChildren'] = true
-        } else {
-          item['hasChildren'] = false
         }
-      })
+        str_arr.map((item, index) => {
+          category_arr.push(item)
+          const child_arr = this.get_tree(item.id, data, (item.level ? item.level : 0))
+          if (child_arr.length > 0) {
+            item['hasChildren'] = true
+            category_arr = category_arr.concat(child_arr)
+          } else {
+            item['hasChildren'] = false
+          }
+        })
+      }
       return category_arr
     },
     getChild(bcid, arr, level) {
@@ -441,6 +448,10 @@ export default {
     box-sizing: border-box;
   }
   .category-select .level2{
-    margin-left: 20px;
+    margin-left: 15px;
+    padding: 0 15px;
+  }
+  .category-select .level3{
+    margin-left: 30px;
   }
 </style>
