@@ -43,7 +43,7 @@
     </el-table>
     <pagination v-show="total > 0 && !is_tree" :total="total" :page.sync="listQuery.page" :limit.sync="listQuery.limit" @pagination="fetchContentList" />
     <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
-      <el-form ref="dataForm" :rules="rules" :model="temp" label-position="left" label-width="100px" style="width: 400px; margin-left:50px;">
+      <el-form ref="dataForm" :rules="rules" :model="temp" label-position="left" label-width="100px" style="width: 100%; ">
         <el-form-item v-for="field in field_arr" :key="field.id" :label="field.name" :prop="field.field" :required="field.required ===1">
           <el-input v-if="field.type === 'title' || field.type === 'text' || field.type === 'catid' || field.type === 'varchar'" v-model="temp[field.field]" :placeholder="field.name" />
           <el-select v-if="field.type === 'radio' || field.type === 'checkbox' || field.type === 'groupid' || field.type === 'select'" v-model="temp[field.field]" :placeholder="field.name" class="filter-item">
@@ -52,6 +52,25 @@
           <el-select v-if="field.type === 'source'" v-model="temp[field.field]" :placeholder="field.name" class="filter-item">
             <el-option v-for="item in source_info[field.field]" :key="item.key" :label="item.name" :value="item.value" />
           </el-select>
+          <el-upload
+            v-if="field.type === 'image' || field.type === 'images' || field.type === 'file' || field.type === 'files'"
+            ref="upload"
+            class="upload-demo"
+            list-type="picture-card"
+            action="https://jsonplaceholder.typicode.com/posts/"
+            :auto-upload="false"
+            :on-success="uploadSuccess"
+            :on-preview="previewFile"
+            :on-remove="removeFile"
+            :before-remove="beforeRemove"
+            :multiple="field.type === 'images' || field.type === 'files' ? true : false"
+            :limit="field.type === 'images' || field.type === 'files' ? 9 : 1"
+            :on-exceed="uploadMaxLimit"
+            :file-list="temp.file || []"
+          >
+            <el-button slot="trigger" size="small" type="primary">选择文件</el-button>
+            <div style="margin-top: 10px;"><el-button style="margin-left: 10px;" size="small" type="success" @click="submitUpload">开始上传</el-button></div>
+          </el-upload>
           <el-date-picker v-if="field.type === 'datetime'" v-model="temp[field.field]" type="datetime" format="yyyy-MM-dd HH:mm:ss" :placeholder="field.name" />
         </el-form-item>
       </el-form>
@@ -59,6 +78,9 @@
         <el-button @click="dialogFormVisible = false">取消</el-button>
         <el-button type="primary" @click="dialogStatus === 'create' ? createData() : updateData()">{{ dialogStatus === 'create' ? '提交' : '保存' }}</el-button>
       </div>
+    </el-dialog>
+    <el-dialog :visible.sync="is_preview_show">
+      <img width="100%" :src="previewImgUrl" alt="">
     </el-dialog>
   </div>
 </template>
@@ -130,7 +152,10 @@ export default {
         create: '添加'
       },
       rules: {},
-      downloadLoading: false
+      downloadLoading: false,
+      is_preview_show: false, // 是否预览
+      previewImgUrl: '', // 预览图片地址
+      fileList: [] // 上传文件列表
     }
   },
   created() {
@@ -154,13 +179,8 @@ export default {
     fetchModuleFieldList(moduleid) {
       fetchModuleFieldList({ moduleid }).then(data => {
         if (data && data instanceof Array && data.length > 0) {
-          this.field_arr = data
-          this.field_arr.map(item => {
-            this.temp[item.field] = ''
-          })
-          this.temp_base = Object.assign({}, this.temp)
-          this.rules = this.formatRules(data)
           data.map(item => {
+            this.temp[item.field] = ''
             if (this.display_field.indexOf(item.field) > -1) {
               this.display_arr.push(item)
               this.display_arr.sort((a, b) => {
@@ -175,7 +195,13 @@ export default {
                 this.source_info[item.field] = data
               })
             }
+            if (item.type === 'file' || item.type === 'files' || item.type === 'images' || item.type === 'image') {
+              this.$set(this.temp, 'file', [])
+            }
           })
+          this.field_arr = data
+          this.temp_base = Object.assign({}, this.temp)
+          this.rules = this.formatRules(data)
         }
       })
     },
@@ -390,6 +416,33 @@ export default {
           return v[j.field]
         }
       }))
+    },
+    // 上传最大显示回调
+    uploadMaxLimit(files, fileList) {
+      this.$message.warning(`当前限制选择 3 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`)
+    },
+    // 移除文件
+    removeFile(file, fileList) {
+      console.log(file, fileList)
+    },
+    // 预览文件
+    previewFile(file) {
+      this.previewImgUrl = file.url
+      this.is_preview_show = true
+    },
+    // 移除文件之前回调
+    beforeRemove(file, fileList) {
+      return this.$confirm(`确定移除 ${file.name}？`)
+    },
+    // 文件上传
+    submitUpload() {
+      this.$refs.upload[0].submit()
+    },
+    // 上传成功回调
+    uploadSuccess(response, file, fileList) {
+      console.log(response)
+      console.log(file)
+      console.log(fileList)
     }
   }
 }
@@ -401,4 +454,7 @@ export default {
     align-items: center;
   }
   .filter-container > .select-item{ padding: 0 3px; }
+</style>
+<style type="text/css">
+  .upload-demo ul li{ float: left; }
 </style>
