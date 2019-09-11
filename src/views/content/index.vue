@@ -54,10 +54,10 @@
           </el-select>
           <el-upload
             v-if="field.type === 'image' || field.type === 'images' || field.type === 'file' || field.type === 'files'"
-            ref="upload"
+            :ref="'upload_' + field.field"
             class="upload-demo"
             list-type="picture-card"
-            action="https://jsonplaceholder.typicode.com/posts/"
+            :action="upload_url"
             :auto-upload="false"
             :on-success="uploadSuccess"
             :on-preview="previewFile"
@@ -69,7 +69,7 @@
             :file-list="temp.file || []"
           >
             <el-button slot="trigger" size="small" type="primary">选择文件</el-button>
-            <div style="margin-top: 10px;"><el-button style="margin-left: 10px;" size="small" type="success" @click="submitUpload">开始上传</el-button></div>
+            <div style="margin-top: 10px;"><el-button style="margin-left: 10px;" size="small" type="success" @click="submitUpload('upload_' + field.field)">开始上传</el-button></div>
           </el-upload>
           <el-date-picker v-if="field.type === 'datetime'" v-model="temp[field.field]" type="datetime" format="yyyy-MM-dd HH:mm:ss" :placeholder="field.name" />
         </el-form-item>
@@ -133,6 +133,7 @@ export default {
         page: 1,
         limit: 20
       },
+      upload_url: process.env.VUE_APP_BASE_API + '/upload',
       catid: this.$route.meta.id, // 栏目id
       is_tree: this.$route.meta.is_tree, // 是否为树形结构
       moduleid: this.$route.meta.moduleid, // 模型id
@@ -260,6 +261,8 @@ export default {
     },
     // 创建内容
     createData() {
+      console.log(this.temp)
+      return
       this.$refs['dataForm'].validate((valid) => {
         if (valid) {
           const form = Object.assign({}, { moduleid: this.moduleid, catid: this.catid }, this.temp)
@@ -435,14 +438,15 @@ export default {
       return this.$confirm(`确定移除 ${file.name}？`)
     },
     // 文件上传
-    submitUpload() {
-      this.$refs.upload[0].submit()
+    submitUpload(ref_value) {
+      this.$refs[ref_value][0].submit()
     },
     // 上传成功回调
     uploadSuccess(response, file, fileList) {
-      console.log(response)
-      console.log(file)
-      console.log(fileList)
+      console.log(this.temp.file instanceof Array)
+      if (response.code === 0) {
+        this.temp.file.push({ name: '', url: 'http://localhost:7001' + response.data })
+      }
     }
   }
 }
