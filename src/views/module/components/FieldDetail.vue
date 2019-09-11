@@ -300,11 +300,17 @@ export default {
       return route.path === this.$route.path
     },
     // 获取字段信息
-    fetchModuleField() {
-      fetchModuleFieldDetail({ moduleid: this.moduleid, fieldid: this.fieldid }).then(data => {
-        this.form = data
-        this.form.oldfield = data.field
-      })
+    async fetchModuleField() {
+      const data = await fetchModuleFieldDetail({ moduleid: this.moduleid, fieldid: this.fieldid })
+      this.form = data
+      this.form.oldfield = data.field
+      this.$set(this.form, 'setup', JSON.parse(data.setup))
+      if (this.form.type === 'source') {
+        if (this.source_arr.length === 0) {
+          await this.getDataSource()
+        }
+        this.changeSource(this.form.setup['sourceid'])
+      }
     },
     // 提交字段数据
     submitForm(formName) {
@@ -365,16 +371,14 @@ export default {
       }
     },
     // 获取数据源列表
-    getDataSource() {
-      fetchCategoryList().then(data => {
-        if (data instanceof Array && data.length > 0) {
-          this.source_arr = this.get_tree(0, data)
-        }
-      })
+    async getDataSource() {
+      const data = await fetchCategoryList()
+      if (data instanceof Array && data.length > 0) {
+        this.source_arr = this.get_tree(0, data)
+      }
     },
     // 改变数据源回调
     changeSource(id) {
-      console.log(id)
       this.source_arr.map(item => {
         if (item.id === id) {
           this.fetchModuleFieldList(item.moduleid)
