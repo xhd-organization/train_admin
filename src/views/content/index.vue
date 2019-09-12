@@ -59,14 +59,14 @@
             list-type="picture-card"
             :action="upload_url"
             :auto-upload="false"
-            :on-success="uploadSuccess"
+            :on-success="(res,file)=>{return uploadSuccess(res,file, field.field)}"
             :on-preview="previewFile"
-            :on-remove="removeFile"
+            :on-remove="(file)=>{return removeFile(file, field.field)}"
             :before-remove="beforeRemove"
             :multiple="field.type === 'images' || field.type === 'files' ? true : false"
             :limit="field.type === 'images' || field.type === 'files' ? 9 : 1"
             :on-exceed="uploadMaxLimit"
-            :file-list="temp.file || []"
+            :file-list="temp[field.field]"
           >
             <el-button slot="trigger" size="small" type="primary">选择文件</el-button>
             <div style="margin-top: 10px;"><el-button style="margin-left: 10px;" size="small" type="success" @click="submitUpload('upload_' + field.field)">开始上传</el-button></div>
@@ -156,7 +156,7 @@ export default {
       downloadLoading: false,
       is_preview_show: false, // 是否预览
       previewImgUrl: '', // 预览图片地址
-      fileList: [] // 上传文件列表
+      file: {} // 上传文件对象
     }
   },
   created() {
@@ -197,7 +197,7 @@ export default {
               })
             }
             if (item.type === 'file' || item.type === 'files' || item.type === 'images' || item.type === 'image') {
-              this.$set(this.temp, 'file', [])
+              this.$set(this.temp, item.field, [])
             }
           })
           this.field_arr = data
@@ -261,8 +261,6 @@ export default {
     },
     // 创建内容
     createData() {
-      console.log(this.temp)
-      return
       this.$refs['dataForm'].validate((valid) => {
         if (valid) {
           const form = Object.assign({}, { moduleid: this.moduleid, catid: this.catid }, this.temp)
@@ -422,11 +420,17 @@ export default {
     },
     // 上传最大显示回调
     uploadMaxLimit(files, fileList) {
-      this.$message.warning(`当前限制选择 3 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`)
+      this.$message.warning(`当前限制选择 1 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`)
     },
     // 移除文件
-    removeFile(file, fileList) {
-      console.log(file, fileList)
+    removeFile(file, field) {
+      if (this.temp[field] instanceof Array && this.temp[field].length > 0) {
+        this.temp[field].map((item, index) => {
+          if (item.url === file.url) {
+            this.temp[field].splice(index, 1)
+          }
+        })
+      }
     },
     // 预览文件
     previewFile(file) {
@@ -442,10 +446,9 @@ export default {
       this.$refs[ref_value][0].submit()
     },
     // 上传成功回调
-    uploadSuccess(response, file, fileList) {
-      console.log(this.temp.file instanceof Array)
+    uploadSuccess(response, file, field) {
       if (response.code === 0) {
-        this.temp.file.push({ name: '', url: 'http://localhost:7001' + response.data })
+        this.temp[field].push({ name: '', url: 'http://localhost:7001' + response.data })
       }
     }
   }

@@ -493,6 +493,7 @@ export const asyncRoutes = [
   {
     path: '/example',
     component: Layout,
+    hidden: true,
     redirect: '/example/list',
     name: 'Example',
     meta: {
