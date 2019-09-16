@@ -46,6 +46,14 @@
           <el-col :span="4" class="align">是否包括负数</el-col>
           <el-col :span="2"><el-checkbox v-model="form.setup['numbertype']" label="1" checked>不包括负数</el-checkbox></el-col>
         </el-row>
+        <el-row v-if="form.type === 'file' || form.type === 'files' || form.type === 'image' || form.type === 'images'" :gutter="20" type="flex" justify="start">
+          <el-col :span="4" class="align">允许上传的类型</el-col>
+          <el-col :span="20">
+            <el-checkbox-group v-model="form.setup['filetype']">
+              <el-checkbox v-for="item in filetype" :key="item.id" :label="item" name="filetype">{{ item }}</el-checkbox>
+            </el-checkbox-group>
+          </el-col>
+        </el-row>
         <el-row v-if="form.type === 'number'" :gutter="20" type="flex" justify="start">
           <el-col :span="4" class="align">小数位数</el-col>
           <el-col :span="4">
@@ -237,7 +245,7 @@ export default {
         classname: '',
         minlength: 0,
         maxlength: 0,
-        pattern: '',
+        pattern: '', // 验证规则
         unpostgroup: [],
         desc: '',
         errormsg: '',
@@ -246,6 +254,7 @@ export default {
         type: '',
         status: 0
       },
+      filetype: ['.jpeg', 'jpg', '.png', '.mp4', '.mp3', '.xls', '.xlsx', '.ppt', '.pptx', '.pdf', '.doc', '.docx', '.zip'], // 允许上传的文件类型
       moduleid: this.$route.params.moduleid,
       fieldid: this.$route.params.fieldid,
       source_arr: [], // 数据源列表
@@ -305,6 +314,9 @@ export default {
       this.form = data
       this.form.oldfield = data.field
       this.$set(this.form, 'setup', JSON.parse(data.setup))
+      if ((this.form.type === 'file' || this.form.type === 'files' || this.form.type === 'images' || this.form.type === 'images') && !this.form.setup['filetype']) {
+        this.$set(this.form.setup, 'filetype', this.filetype)
+      }
       if (this.form.type === 'source') {
         if (this.source_arr.length === 0) {
           await this.getDataSource()
@@ -320,9 +332,9 @@ export default {
           if (filter_setup.indexOf(this.form.type) > -1) {
             Object.assign(this.form, { setup: '' })
           }
-          const create_form = Object.assign({}, this.form, { moduleid: this.moduleid })
+          const create_form = Object.assign({}, this.form, { moduleid: this.moduleid }, { setup: JSON.stringify(this.form.setup) })
           if (this.isEdit) {
-            updateModuleField(this.form).then(data => {
+            updateModuleField(create_form).then(data => {
               this.$notify({
                 title: '成功',
                 message: '更新字段成功',
@@ -368,6 +380,9 @@ export default {
           this.getDataSource()
         }
         this.$set(this.form.setup, 'inputtype', 'select')
+      }
+      if (type === 'file' || type === 'files' || type === 'images' || type === 'images') {
+        this.$set(this.form.setup, 'filetype', this.filetype)
       }
     },
     // 获取数据源列表

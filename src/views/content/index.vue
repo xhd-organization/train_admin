@@ -4,7 +4,10 @@
       <div v-for="field in select_arr" :key="field.id" class="select-item">
         <el-input v-if="field.type === 'title' || field.type === 'text' || field.type === 'catid' || field.type === 'varchar'" v-model="postForm[field.field]" :placeholder="field.name" style="width: 200px;" class="filter-item" @keyup.enter.native="selectBtn" />
         <el-select v-if="field.type === 'radio' || field.type === 'checkbox' || field.type === 'select'" v-model="postForm[field.field]" :placeholder="field.name" clearable class="filter-item">
-          <el-option v-for="item in filterSelectOptions(field.setup)" :key="item.key" :label="item.name" :value="item.value" />
+          <el-option v-for="item in field.setup['options']" :key="item.key" :label="item.name" :value="item.value" />
+        </el-select>
+        <el-select v-if="field.type === 'source'" v-model="postForm[field.field]" :placeholder="field.name" clearable class="filter-item">
+          <el-option v-for="item in source_info[field.field]" :key="item.id" :label="item.name" :value="item.value" />
         </el-select>
         <el-date-picker v-if="field.type === 'datetime'" v-model="postForm[field.field]" type="datetime" format="yyyy-MM-dd HH:mm:ss" :placeholder="field.name" />
       </div>
@@ -28,8 +31,8 @@
     >
       <el-table-column v-for="field in display_arr" :key="field.id" :label="field.name" :prop="field.field" align="center">
         <template slot-scope="scope">
-          <span v-if="field.type === 'radio' || field.type === 'checkbox' || field.type === 'select'">{{ scope.row[field.field] | formatFieldName(field.setup) }}</span>
-          <span v-else-if="field.type === 'datetime'">{{ scope.row[field.field] | formatTime() }}</span>
+          <span v-if="field.type === 'radio' || field.type === 'checkbox' || field.type === 'select'">{{ scope.row[field.field] | formatFieldName(field.setup['options']) }}</span>
+          <span v-else-if="field.type === 'datetime'">{{ scope.row[field.field] | parseTime }}</span>
           <span v-else>{{ scope.row[field.field] }}</span>
         </template>
       </el-table-column>
@@ -47,7 +50,7 @@
         <el-form-item v-for="field in field_arr" :key="field.id" :label="field.name" :prop="field.field" :required="field.required ===1">
           <el-input v-if="field.type === 'title' || field.type === 'text' || field.type === 'catid' || field.type === 'varchar'" v-model="temp[field.field]" :placeholder="field.name" />
           <el-select v-if="field.type === 'radio' || field.type === 'checkbox' || field.type === 'groupid' || field.type === 'select'" v-model="temp[field.field]" :placeholder="field.name" class="filter-item">
-            <el-option v-for="item in filterSelectOptions(field.setup)" :key="item.key" :label="item.name" :value="item.value" />
+            <el-option v-for="item in field.setup['options']" :key="item.key" :label="item.name" :value="item.value" />
           </el-select>
           <el-select v-if="field.type === 'source'" v-model="temp[field.field]" :placeholder="field.name" class="filter-item">
             <el-option v-for="item in source_info[field.field]" :key="item.key" :label="item.name" :value="item.value" />
@@ -59,6 +62,7 @@
             list-type="picture-card"
             :action="upload_url"
             :auto-upload="false"
+            :accept="field.setup['filetype']"
             :on-success="(res,file)=>{return uploadSuccess(res,file, field.field)}"
             :on-preview="previewFile"
             :on-remove="(file)=>{return removeFile(file, field.field)}"
@@ -102,23 +106,22 @@ export default {
   directives: { waves },
   filters: {
     // 格式化字段值进行显示
-    formatFieldName(value, setupOptions) {
-      if (setupOptions) {
-        const setup = JSON.parse(setupOptions)
-        const value_arr = setup['options'].indexOf(',') > -1 ? setup['options'].split(',') : setup['options'].split('\n')
-        if (value_arr && value_arr instanceof Array && value_arr.length > 0) {
-          value_arr.map(item => {
-            if (Number(item.split('|')[1]) === Number(value)) {
-              value = item.split('|')[0]
+    formatFieldName(value, setup) {
+      if (setup) {
+        if (setup && setup instanceof Array && setup.length > 0) {
+          setup.map(item => {
+            if (item.value === value) {
+              value = item.name
             }
           })
         }
       }
       return value
     },
+    // 时间处理显示
     parseTime(value) {
       if (value) {
-        return formatTime(value, 'y-m-d h:i:s')
+        return formatTime(value, '{y}-{m}-{d} {h}:{i}:{s}', true)
       }
       return value
     }
@@ -127,13 +130,13 @@ export default {
     return {
       tableKey: 0,
       list: [], // 列表数据
-      total: 0,
+      total: 0, // 列表数据总数量
       listLoading: true,
       listQuery: {
         page: 1,
         limit: 20
       },
-      upload_url: process.env.VUE_APP_BASE_API + '/upload',
+      upload_url: process.env.VUE_APP_BASE_API + '/upload', // 上传地址
       catid: this.$route.meta.id, // 栏目id
       is_tree: this.$route.meta.is_tree, // 是否为树形结构
       moduleid: this.$route.meta.moduleid, // 模型id
@@ -148,12 +151,9 @@ export default {
       temp_base: {}, // 编辑框表单数据对象基础模板
       dialogFormVisible: false, // 是否显示编辑框
       dialogStatus: '', // 编辑框状态，创建或修改
-      textMap: {
-        update: '编辑',
-        create: '添加'
-      },
+      textMap: { update: '编辑', create: '添加' },
       rules: {},
-      downloadLoading: false,
+      downloadLoading: false, // 导出下载加载状态
       is_preview_show: false, // 是否预览
       previewImgUrl: '', // 预览图片地址
       file: {} // 上传文件对象
@@ -180,8 +180,18 @@ export default {
     fetchModuleFieldList(moduleid) {
       fetchModuleFieldList({ moduleid }).then(data => {
         if (data && data instanceof Array && data.length > 0) {
-          data.map(item => {
+          const arr = data.map(item => {
             this.temp[item.field] = ''
+            const setup = item.setup ? JSON.parse(item.setup) : {}
+            if (item.type === 'radio' || item.type === 'checkbox' || item.type === 'groupid' || item.type === 'select') {
+              const options = this.filterSelectOptions(setup.options)
+              Object.assign(setup, { options })
+            }
+            if (item.type === 'file' || item.type === 'files' || item.type === 'images' || item.type === 'image') {
+              this.$set(this.temp, item.field, [])
+              setup['filetype'] = setup['filetype'] instanceof Array && setup['filetype'].length > 0 ? setup['filetype'].toString() : ''
+            }
+            item.setup = setup
             if (this.display_field.indexOf(item.field) > -1) {
               this.display_arr.push(item)
               this.display_arr.sort((a, b) => {
@@ -191,16 +201,16 @@ export default {
             if (this.select_field.indexOf(item.field) > -1) {
               this.select_arr.push(item)
             }
+            // 数据源处理
             if (item.type === 'source') {
               this.filtersSourceOptions(item.setup).then(data => {
-                this.source_info[item.field] = data
+                this.$set(this.source_info, item.field, data)
               })
             }
-            if (item.type === 'file' || item.type === 'files' || item.type === 'images' || item.type === 'image') {
-              this.$set(this.temp, item.field, [])
-            }
+            return item
           })
-          this.field_arr = data
+          console.log(arr)
+          this.field_arr = arr
           this.temp_base = Object.assign({}, this.temp)
           this.rules = this.formatRules(data)
         }
@@ -212,7 +222,7 @@ export default {
         const obj = {}
         file_arr.map(item => {
           let trigger = 'blur'
-          if (item.type === 'radio' || item.type === 'checkbox' || item.type === 'select') {
+          if (item.type === 'radio' || item.type === 'checkbox' || item.type === 'select' || item.type === 'source') {
             trigger = 'change'
           }
           const rule_info = {
@@ -241,7 +251,6 @@ export default {
     },
     // 查询
     selectBtn() {
-      console.log(this.postForm)
       Object.keys(this.postForm).map(key => {
         if (this.postForm[key] === '') {
           delete this.postForm[key]
@@ -341,10 +350,9 @@ export default {
     // 过滤设置值
     filterSelectOptions(options) {
       if (options) {
-        let str = JSON.parse(options)['options']
-        str = str.indexOf(',') > -1 ? str.split(',') : str.split('\n')
-        if (str && str instanceof Array && str.length > 0) {
-          const arr = str.map(item => {
+        options = options.indexOf(',') > -1 ? options.split(',') : options.split('\n')
+        if (options && options instanceof Array && options.length > 0) {
+          const arr = options.map(item => {
             return {
               name: item.split('|')[0],
               value: item.split('|')[1].toString()
@@ -358,15 +366,12 @@ export default {
     // 过滤处理数据源信息
     async filtersSourceOptions(options) {
       if (options) {
-        const info = JSON.parse(options)
-        const sourceid = info.sourceid
-        const source_name = info.source_name
-        const source_value = info.source_value
-        const source_moduleid = info.source_moduleid
+        const sourceid = options.sourceid
+        const source_name = options.source_name
+        const source_value = options.source_value
+        const source_moduleid = options.source_moduleid
         let form = { catid: sourceid, moduleid: source_moduleid }
-        if (info) {
-          form = Object.assign({}, form)
-        }
+        form = Object.assign({}, form)
         const list = await fetchContentList(form)
         if (list.total > 0) {
           const arr = list.items.map(item => {
@@ -418,7 +423,7 @@ export default {
         }
       }))
     },
-    // 上传最大显示回调
+    // 上传数量超过最大显示回调
     uploadMaxLimit(files, fileList) {
       this.$message.warning(`当前限制选择 1 个文件，本次选择了 ${files.length} 个文件，共选择了 ${files.length + fileList.length} 个文件`)
     },
