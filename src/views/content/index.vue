@@ -21,7 +21,25 @@
         导出
       </el-button>
     </el-form>
+    <el-tree
+      v-if="is_tree"
+      :data="tree_data"
+      show-checkbox
+      node-key="id"
+      default-expand-all
+      :expand-on-click-node="false"
+    >
+      <span slot-scope="{ node, data }" class="custom-tree-node">
+        <span>{{ data.name }}</span>
+        <span>
+          <el-button type="text" size="mini" @click="() => handleCreate(data)">添加</el-button>
+          <el-button type="text" size="mini" @click="handleUpdate(data)">编辑</el-button>
+          <el-button type="text" size="mini" @click="() => remove(node, data)">删除</el-button>
+        </span>
+      </span>
+    </el-tree>
     <el-table
+      v-else
       :key="tableKey"
       v-loading="listLoading"
       :data="list"
@@ -38,13 +56,13 @@
       </el-table-column>
       <el-table-column label="操作" align="center" width="300" class-name="small-padding fixed-width">
         <template slot-scope="scope">
-          <el-button v-if="is_tree" type="primary" size="small" @click="handleUpdate(scope.row)">添加子项</el-button>
           <el-button type="primary" size="mini" @click="handleUpdate(scope.row)">编辑</el-button>
           <el-button v-if="scope.row.status!='deleted'" size="mini" type="danger" @click="deleteBtn(scope.$index, scope.row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
     <pagination v-show="total > 0 && !is_tree" :total="total" :page.sync="listQuery.page" :limit.sync="listQuery.limit" @pagination="fetchContentList" />
+    {{ tree_data }}
     <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
       <el-form ref="dataForm" :rules="rules" :model="temp" label-position="left" label-width="100px" style="width: 100%; ">
         <el-form-item v-for="field in field_arr" :key="field.id" :label="field.name" :prop="field.field" :required="field.required ===1">
@@ -63,9 +81,9 @@
             :action="upload_url"
             :auto-upload="false"
             :accept="field.setup['filetype']"
-            :on-success="(res,file)=>{return uploadSuccess(res,file, field.field)}"
+            :on-success="(res, file)=> { return uploadSuccess(res,file, field.field) }"
             :on-preview="previewFile"
-            :on-remove="(file)=>{return removeFile(file, field.field)}"
+            :on-remove="(file)=> { return removeFile(file, field.field) }"
             :before-remove="beforeRemove"
             :multiple="field.type === 'images' || field.type === 'files' ? true : false"
             :limit="field.type === 'images' || field.type === 'files' ? 9 : 1"
@@ -156,7 +174,9 @@ export default {
       downloadLoading: false, // 导出下载加载状态
       is_preview_show: false, // 是否预览
       previewImgUrl: '', // 预览图片地址
-      file: {} // 上传文件对象
+      file: {}, // 上传文件对象
+      tree_data: [], // 树形结构数据
+      tree_id: 1000
     }
   },
   created() {
@@ -171,8 +191,12 @@ export default {
         form = Object.assign({}, form, info)
       }
       fetchContentList(form).then(data => {
-        this.list = data.items
-        this.total = data.total
+        if (this.is_tree) {
+          this.tree_data = data.items
+        } else {
+          this.list = data.items
+          this.total = data.total
+        }
         this.listLoading = false
       })
     },
@@ -209,7 +233,6 @@ export default {
             }
             return item
           })
-          console.log(arr)
           this.field_arr = arr
           this.temp_base = Object.assign({}, this.temp)
           this.rules = this.formatRules(data)
@@ -455,6 +478,19 @@ export default {
       if (response.code === 0) {
         this.temp[field].push({ name: '', url: 'http://localhost:7001' + response.data })
       }
+    },
+    append(data) {
+      const newChild = { id: this.tree_id++, name: 'testtest', children: [] }
+      if (!data.children) {
+        this.$set(data, 'children', [])
+      }
+      data.children.push(newChild)
+    },
+    remove(node, data) {
+      const parent = node.parent
+      const children = parent.data.children || parent.data
+      const index = children.findIndex(d => d.id === data.id)
+      children.splice(index, 1)
     }
   }
 }
