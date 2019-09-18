@@ -28,8 +28,8 @@
       default-expand-all
       :expand-on-click-node="false"
     >
-      <span slot-scope="{ node, data }" class="custom-tree-node">
-        <span class="tree_name">{{ data.name }}</span>
+      <span slot-scope="{ node, data }" class="flex custom-tree-node">
+        <span class="flex tree_name"><img :src="base_url + '/uxy/diy/' + data.images">{{ data.name }}</span>
         <span>
           <el-button type="text" size="small" @click="() => handleCreate(data)">添加子项</el-button>
           <el-button type="text" size="small" @click="handleUpdate(data)">编辑</el-button>
@@ -50,6 +50,7 @@
         <template slot-scope="scope">
           <span v-if="field.type === 'radio' || field.type === 'checkbox' || field.type === 'select'">{{ scope.row[field.field] | formatFieldName(field.setup['options']) }}</span>
           <span v-else-if="field.type === 'datetime'">{{ scope.row[field.field] | parseTime }}</span>
+          <span v-else-if="field.type === 'source'">{{ scope.row[field.field] }}</span>
           <span v-else>{{ scope.row[field.field] }}</span>
         </template>
       </el-table-column>
@@ -157,6 +158,7 @@ export default {
         page: 1,
         limit: 20
       },
+      base_url: 'http://127.0.0.1:7001', // 服务器地址
       upload_url: process.env.VUE_APP_BASE_API + '/upload', // 上传地址
       catid: this.$route.meta.id, // 栏目id
       is_tree: this.$route.meta.is_tree, // 是否为树形结构
@@ -190,14 +192,15 @@ export default {
   methods: {
     // 获取内容信息列表
     fetchContentList(info) {
-      let form = { catid: this.catid, moduleid: this.moduleid }
+      const is_all = this.is_tree
+      let form = { catid: this.catid, moduleid: this.moduleid, is_all }
       if (info) {
         form = Object.assign({}, form, info)
       }
       fetchContentList(form).then(data => {
         if (this.is_tree) {
-          this.tree_data = this.tree_data.concat(getTree(0, data.items, 0, 'tree'))
-          this.tree_data_base = this.tree_data_base.concat(getTree(0, data.items, 0, 'list'))
+          this.tree_data = this.tree_data.concat(getTree('0', data.items, 0, 'tree'))
+          this.tree_data_base = this.tree_data_base.concat(getTree('0', data.items, 0, 'list'))
         } else {
           this.list = data.items
           this.total = data.total
@@ -511,7 +514,8 @@ export default {
     align-items: center;
   }
   .filter-container > .select-item{ padding: 0 3px; }
-  .tree_name{ font-size: 14px; padding-right: 10px; }
+  .tree_name{ font-size: 14px; padding-right: 10px; justify-content: flex-start; }
+  .tree_name img{ padding-right: 6px; }
 </style>
 <style type="text/css">
   .upload-demo ul li{ float: left; }
