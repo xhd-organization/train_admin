@@ -350,3 +350,61 @@ export function removeClass(ele, cls) {
     ele.className = ele.className.replace(reg, ' ')
   }
 }
+
+/**
+ * 格式化处理树形结构数据
+ * @date        2019-09-18
+ * @author cnvp
+ * @anotherdate 2019-09-18T10:29:01+0800
+ * @param       {String}                 bcid  [父项id]
+ * @param       {Array}                 data  [需要处理的数组]
+ * @param       {Number}                 level [层级]
+ * @param       {String}                 type [数据类型, list=平级列表, tree = 树形层级结构]
+ * @returns     {Array}                       [返回处理后的树形数组]
+ */
+export function getTree(bcid, data, level = 0, type = 'list') {
+  let tree_arr = []
+  let category_arr = []
+  const str_arr = getChild(bcid, data, (level || 0))
+  if (str_arr.length > 0) {
+    if (bcid !== 0) {
+      str_arr[str_arr.length - 1]['is_last'] = true
+    }
+    tree_arr = str_arr.map((item, index) => {
+      const child_arr = getTree(item.id, data, (item.level ? item.level : 0), type)
+      item['hasChildren'] = child_arr.length > 0
+      if (type === 'list') {
+        category_arr.push(item)
+        category_arr = category_arr.concat(child_arr)
+      } else if (type === 'tree') {
+        item['children'] = child_arr
+        if (child_arr.length > 0) {
+          item['children'][child_arr.length - 1]['is_last'] = true
+        }
+      }
+      return item
+    })
+  }
+  return type === 'list' ? category_arr : tree_arr
+}
+
+/**
+ * 获取当前数组的所有的直接子集
+ * @date        2019-09-18
+ * @author cnvp
+ * @anotherdate 2019-09-18T10:27:40+0800
+ * @param       {String}                 bcid  [父项id]
+ * @param       {Array}                 arr   [需要处理的数组]
+ * @param       {Number}                 level [层级]
+ * @returns     {Array}                       [返回结果数组]
+ */
+export function getChild(bcid, arr, level) {
+  const arr_str = arr.filter(item => {
+    if (item.parentid === bcid) {
+      item['level'] = level + 1
+      return true
+    }
+  })
+  return arr_str
+}
+

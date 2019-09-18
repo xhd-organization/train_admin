@@ -11,30 +11,29 @@
         </el-select>
         <el-date-picker v-if="field.type === 'datetime'" v-model="postForm[field.field]" type="datetime" format="yyyy-MM-dd HH:mm:ss" :placeholder="field.name" />
       </div>
-      <el-button v-if="select_arr.length > 0 && !is_tree" v-waves class="filter-item" type="primary" icon="el-icon-search" @click="selectBtn">
+      <el-button v-if="select_arr.length > 0" v-waves class="filter-item" type="primary" icon="el-icon-search" @click="selectBtn">
         查询
       </el-button>
-      <el-button v-if="!is_tree" class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="handleCreate">
+      <el-button class="filter-item" style="margin-left: 10px;" type="primary" icon="el-icon-edit" @click="handleCreate">
         添加
       </el-button>
-      <el-button v-if="!is_tree" v-waves :loading="downloadLoading" class="filter-item" type="primary" icon="el-icon-download" @click="handleDownload">
+      <el-button v-waves :loading="downloadLoading" class="filter-item" type="primary" icon="el-icon-download" @click="handleDownload">
         导出
       </el-button>
     </el-form>
     <el-tree
       v-if="is_tree"
       :data="tree_data"
-      show-checkbox
       node-key="id"
       default-expand-all
       :expand-on-click-node="false"
     >
       <span slot-scope="{ node, data }" class="custom-tree-node">
-        <span>{{ data.name }}</span>
+        <span class="tree_name">{{ data.name }}</span>
         <span>
-          <el-button type="text" size="mini" @click="() => handleCreate(data)">添加</el-button>
-          <el-button type="text" size="mini" @click="handleUpdate(data)">编辑</el-button>
-          <el-button type="text" size="mini" @click="() => remove(node, data)">删除</el-button>
+          <el-button type="text" size="small" @click="() => handleCreate(data)">添加子项</el-button>
+          <el-button type="text" size="small" @click="handleUpdate(data)">编辑</el-button>
+          <el-button type="text" size="small" @click="() => remove(node, data)">删除</el-button>
         </span>
       </span>
     </el-tree>
@@ -62,9 +61,13 @@
       </el-table-column>
     </el-table>
     <pagination v-show="total > 0 && !is_tree" :total="total" :page.sync="listQuery.page" :limit.sync="listQuery.limit" @pagination="fetchContentList" />
-    {{ tree_data }}
     <el-dialog :title="textMap[dialogStatus]" :visible.sync="dialogFormVisible">
-      <el-form ref="dataForm" :rules="rules" :model="temp" label-position="left" label-width="100px" style="width: 100%; ">
+      <el-form ref="dataForm" :rules="rules" :model="temp" label-position="left" label-width="100px" style="width: 100%;">
+        <el-form-item v-if="is_tree" label="上级名称" prop="parentid" :required="true">
+          <el-select v-model="temp['parentid']" placeholder="选择上级名称" class="filter-item">
+            <el-option v-for="item in tree_data_base" :key="item.id" :label="item.name" :value="item.id" />
+          </el-select>
+        </el-form-item>
         <el-form-item v-for="field in field_arr" :key="field.id" :label="field.name" :prop="field.field" :required="field.required ===1">
           <el-input v-if="field.type === 'title' || field.type === 'text' || field.type === 'catid' || field.type === 'varchar'" v-model="temp[field.field]" :placeholder="field.name" />
           <el-select v-if="field.type === 'radio' || field.type === 'checkbox' || field.type === 'groupid' || field.type === 'select'" v-model="temp[field.field]" :placeholder="field.name" class="filter-item">
@@ -112,7 +115,7 @@ import { fetchModuleFieldList } from '@/api/module'
 
 import waves from '@/directive/waves' // waves directive
 
-import { parseTime, formatTime } from '@/utils'
+import { parseTime, formatTime, getTree } from '@/utils'
 import { validateMessages, valideRules } from '@/utils/validate'
 const jsonToExcel = import('@/vendor/Export2Excel')
 
@@ -176,6 +179,7 @@ export default {
       previewImgUrl: '', // 预览图片地址
       file: {}, // 上传文件对象
       tree_data: [], // 树形结构数据
+      tree_data_base: [{ id: 0, name: '作为一级项' }], // 树形数据选择框
       tree_id: 1000
     }
   },
@@ -192,7 +196,8 @@ export default {
       }
       fetchContentList(form).then(data => {
         if (this.is_tree) {
-          this.tree_data = data.items
+          this.tree_data = this.tree_data.concat(getTree(0, data.items, 0, 'tree'))
+          this.tree_data_base = this.tree_data_base.concat(getTree(0, data.items, 0, 'list'))
         } else {
           this.list = data.items
           this.total = data.total
@@ -283,8 +288,12 @@ export default {
       this.fetchContentList(this.postForm)
     },
     // 创建操作
-    handleCreate() {
+    handleCreate(row) {
       this.temp = Object.assign({}, this.temp_base) // 重置模板数据
+      // 单独对树形结构添加parentid
+      if (this.is_tree && row) {
+        this.temp = Object.assign({}, this.temp, { parentid: row.id })
+      }
       this.dialogStatus = 'create'
       this.dialogFormVisible = true
       this.$nextTick(() => {
@@ -313,11 +322,11 @@ export default {
     },
     // 更新操作
     handleUpdate(row) {
-      const obj = {}
-      for (const key in row) {
-        obj[key] = typeof row[key] === 'number' ? row[key].toString() : row[key]
-      }
-      this.temp = Object.assign({}, obj) // copy obj
+      // const obj = {}
+      // for (const key in row) {
+      //   obj[key] = typeof row[key] === 'number' ? row[key].toString() : row[key]
+      // }
+      this.temp = Object.assign({}, row) // copy obj
       this.dialogStatus = 'update'
       this.dialogFormVisible = true
       this.$nextTick(() => {
@@ -502,6 +511,7 @@ export default {
     align-items: center;
   }
   .filter-container > .select-item{ padding: 0 3px; }
+  .tree_name{ font-size: 14px; padding-right: 10px; }
 </style>
 <style type="text/css">
   .upload-demo ul li{ float: left; }

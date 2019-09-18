@@ -59,6 +59,7 @@
 import { fetchCategoryList, updateCategorySort, deleteCategory } from '@/api/category'
 import { fetchModuleList } from '@/api/module'
 
+import { getTree } from '@/utils'
 import { mapGetters } from 'vuex'
 let module_arr = []
 fetchModuleList({ limit: 200 }).then(data => {
@@ -111,42 +112,14 @@ export default {
     getCategoryList() {
       fetchCategoryList().then(data => {
         if (data instanceof Array && data.length > 0) {
-          this.category_arr = this.get_tree(0, data)
+          this.category_arr = getTree(0, data)
+          console.log(this.category_arr)
         }
         this.listLoading = false
         this.$nextTick(() => {
           this.expandAll()
         })
       })
-    },
-    get_tree(bcid, data, level = 0) {
-      let category_arr = []
-      const str_arr = this.getChild(bcid, data, (level || 0))
-      if (str_arr.length > 0) {
-        if (bcid !== 0) {
-          str_arr[str_arr.length - 1]['is_last'] = true
-        }
-        str_arr.map((item, index) => {
-          category_arr.push(item)
-          const child_arr = this.get_tree(item.id, data, (item.level ? item.level : 0))
-          if (child_arr.length > 0) {
-            item['hasChildren'] = true
-            category_arr = category_arr.concat(child_arr)
-          } else {
-            item['hasChildren'] = false
-          }
-        })
-      }
-      return category_arr
-    },
-    getChild(bcid, arr, level) {
-      const arr_str = arr.filter(item => {
-        if (item.parentid === bcid) {
-          item['level'] = level + 1
-          return true
-        }
-      })
-      return arr_str
     },
     // 删除栏目
     deleteBtn(index, row) {
