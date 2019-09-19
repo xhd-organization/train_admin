@@ -38,7 +38,7 @@ function get_router(bcid, data, level = 0) {
           selectfields: subitem.selectfields,
           is_tree: subitem.type === '2'
         }
-        item['children'][idx]['component'] = () => import('@/views/content/index')
+        item['children'][idx]['component'] = subitem.componenturl ? () => import(`@/views/${subitem.componenturl}/index`) : () => import('@/views/content/index')
         item['children'][idx]['name'] = titleCase5(subitem.path) + titleCase5(item.path)
       })
     } else {
@@ -62,7 +62,7 @@ function get_router(bcid, data, level = 0) {
       } else {
         item['children'] = [{
           path: 'index',
-          component: () => import('@/views/content/index'),
+          component: item.componenturl ? () => import(`@/views/${item.componenturl}/index`) : () => import('@/views/content/index'),
           name: titleCase5(item.path),
           meta: {
             title: item.name,
