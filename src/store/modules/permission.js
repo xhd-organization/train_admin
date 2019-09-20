@@ -20,7 +20,7 @@ function titleCase5(str) {
 }
 
 // 获取栏目并格式化成路由形式
-function get_router(bcid, data, level = 0) {
+export function get_router(bcid, data, level = 0) {
   const arr = data.filter((item, index) => {
     const str_arr = get_child_router(item.id, data, (item.level ? item.level : 0))
     if (str_arr.length > 0) {
@@ -36,6 +36,7 @@ function get_router(bcid, data, level = 0) {
           pagesize: subitem.pagesize,
           listfields: subitem.listfields,
           selectfields: subitem.selectfields,
+          role: subitem.postgroup ? subitem.postgroup.split(',') : [],
           is_tree: subitem.type === '2'
         }
         item['children'][idx]['component'] = subitem.componenturl ? () => import(`@/views/${subitem.componenturl}/index`) : () => import('@/views/content/index')
@@ -53,6 +54,7 @@ function get_router(bcid, data, level = 0) {
         pagesize: item.pagesize,
         listfields: item.listfields,
         selectfields: item.selectfields,
+        role: item.postgroup ? item.postgroup.split(',') : [],
         is_tree: item.type === '2'
       }
       item['component'] = Layout
@@ -72,6 +74,7 @@ function get_router(bcid, data, level = 0) {
             pagesize: item.pagesize,
             listfields: item.listfields,
             selectfields: item.selectfields,
+            role: item.postgroup ? item.postgroup.split(',') : [],
             is_tree: item.type === '2'
           }
         }]

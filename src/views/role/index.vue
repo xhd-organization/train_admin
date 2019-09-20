@@ -3,12 +3,12 @@
     <el-button type="primary" @click="handleAddRole">创建角色</el-button>
 
     <el-table :data="rolesList" style="width: 100%;margin-top:30px;">
-      <el-table-column align="center" label="角色名" width="220">
+      <el-table-column align="center" label="角色名" width="400">
         <template slot-scope="scope">
           {{ scope.row.name }}
         </template>
       </el-table-column>
-      <el-table-column align="header-center" label="描述">
+      <el-table-column align="center" label="描述">
         <template slot-scope="scope">
           {{ scope.row.description }}
         </template>
@@ -56,8 +56,9 @@
 
 <script>
 import path from 'path'
-import { deepClone, getTree } from '@/utils'
+import { deepClone } from '@/utils'
 import { fetchCategoryList } from '@/api/category'
+import { filterAsyncRoutes, get_router } from '@/store/modules/permission'
 import { fetchContentList, createContent, updateContent, deleteContent } from '@/api/content'
 
 const defaultRole = {
@@ -98,9 +99,10 @@ export default {
   methods: {
     async getRoutes() {
       const category_arr = await fetchCategoryList()
-      const router_arr = getTree(0, category_arr, 0, 'tree')
-      this.serviceRoutes = category_arr
+      const router_arr = get_router(0, category_arr)
+      this.serviceRoutes = router_arr
       this.routes = this.generateRoutes(router_arr)
+      console.log(this.routes)
     },
     async getRoles() {
       const form = { catid: this.catid, moduleid: this.moduleid, is_all: true }
@@ -111,7 +113,6 @@ export default {
     // Reshape the routes structure so that it looks the same as the sidebar
     generateRoutes(routes, basePath = '/') {
       const res = []
-      console.log(routes)
       for (let route of routes) {
         // skip some route
         if (route.hidden) { continue }
@@ -124,7 +125,7 @@ export default {
 
         const data = {
           path: path.resolve(basePath, route.path),
-          title: route.name
+          title: route.title || route.meta.title
         }
 
         // recursive child routes
@@ -164,7 +165,9 @@ export default {
       this.$nextTick(() => {
         // const routes = this.generateRoutes(this.role.routes)
         const routes = this.generateRoutes(this.routes)
-        this.$refs.tree.setCheckedNodes(this.generateArr(routes))
+        const arr = this.generateArr(routes)
+        console.log(arr)
+        this.$refs.tree.setCheckedNodes(arr)
         // set checked state of a node not affects its father and child nodes
         this.checkStrictly = false
       })
