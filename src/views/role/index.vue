@@ -41,7 +41,7 @@
             :props="defaultProps"
             :default-checked-keys="select_arr"
             show-checkbox
-            node-key="path"
+            node-key="id"
             class="permission-tree"
           />
         </el-form-item>
@@ -58,19 +58,21 @@
 import path from 'path'
 import { deepClone } from '@/utils'
 import { fetchCategoryList } from '@/api/category'
-import { filterAsyncRoutes, get_router } from '@/store/modules/permission'
-import { fetchContentList, createContent, updateContent, deleteContent } from '@/api/content'
+import { get_router } from '@/store/modules/permission'
+import { fetchContentList } from '@/api/content'
+import { updateCategoryPermission, createCategoryPermission, deleteCategoryPsermission } from '@/api/role'
 
 const defaultRole = {
-  key: '',
   name: '',
   description: '',
-  routes: []
+  routes: [],
+  id: ''
 }
 
 export default {
   data() {
     return {
+      rolesListIndex: 0,
       role: Object.assign({}, defaultRole),
       routes: [],
       rolesList: [],
@@ -83,7 +85,8 @@ export default {
       defaultProps: {
         children: 'children',
         label: 'title'
-      }
+      },
+      serviceRoutes: ''
     }
   },
   computed: {
@@ -100,9 +103,9 @@ export default {
     async getRoutes() {
       const category_arr = await fetchCategoryList()
       const router_arr = get_router(0, category_arr)
-      this.serviceRoutes = router_arr
+      this.serviceRoutes = category_arr
+      console.log(this.serviceRoutes)
       this.routes = this.generateRoutes(router_arr)
-      console.log(this.routes)
     },
     async getRoles() {
       const form = { catid: this.catid, moduleid: this.moduleid, is_all: true }
@@ -124,13 +127,13 @@ export default {
         }
 
         const data = {
-          path: path.resolve(basePath, route.path),
+          id: route.id,
           title: route.title || route.meta.title
         }
 
         // recursive child routes
         if (route.children) {
-          data.children = this.generateRoutes(route.children, data.path)
+          data.children = this.generateRoutes(route.children, data.id)
         }
         res.push(data)
       }
@@ -157,19 +160,22 @@ export default {
       this.dialogType = 'new'
       this.dialogVisible = true
     },
-    handleEdit(scope) {
+    handleEdit({ $index, row }) {
+      this.rolesListIndex = $index
+      // console.log(scope.row)
       this.dialogType = 'edit'
+      // this.checkStrictly = true
       this.dialogVisible = true
-      this.checkStrictly = true
-      this.role = deepClone(scope.row)
+      this.role = deepClone(row)
+      const arr = []
+      this.serviceRoutes.map(item => {
+        if (item.meta.role.indexOf(this.role.id) > -1) {
+          arr.push(item.id)
+        }
+      })
       this.$nextTick(() => {
-        // const routes = this.generateRoutes(this.role.routes)
-        const routes = this.generateRoutes(this.routes)
-        const arr = this.generateArr(routes)
-        console.log(arr)
-        this.$refs.tree.setCheckedNodes(arr)
-        // set checked state of a node not affects its father and child nodes
-        this.checkStrictly = false
+        this.$refs.tree.setCheckedKeys(arr)
+        // this.checkStrictly = false
       })
     },
     handleDelete({ $index, row }) {
@@ -179,11 +185,11 @@ export default {
         type: 'warning'
       })
         .then(async() => {
-          await deleteRole(row.key)
+          await deleteCategoryPsermission({ id: row.id, catid: this.catid, moduleid: this.moduleid })
           this.rolesList.splice($index, 1)
           this.$message({
             type: 'success',
-            message: 'Delete succed!'
+            message: '删除成功!'
           })
         })
         .catch(err => { console.error(err) })
@@ -209,29 +215,50 @@ export default {
       const isEdit = this.dialogType === 'edit'
 
       const checkedKeys = this.$refs.tree.getCheckedKeys()
-      this.role.routes = this.generateTree(deepClone(this.serviceRoutes), '/', checkedKeys)
-
+      console.log(checkedKeys)
+      // this.role.routes = this.generateTree(deepClone(this.serviceRoutes), '/', checkedKeys)
+      const updateParams = Object.assign(this.role, { categoryids: checkedKeys.toString(), catid: this.catid, moduleid: this.moduleid })
       if (isEdit) {
-        await updateRole(this.role.key, this.role)
-        for (let index = 0; index < this.rolesList.length; index++) {
-          if (this.rolesList[index].key === this.role.key) {
-            this.rolesList.splice(index, 1, Object.assign({}, this.role))
-            break
+        await updateCategoryPermission(updateParams)
+        this.serviceRoutes = this.serviceRoutes.map(item => {
+          const is_index = item.meta.role.indexOf(this.role.id)
+          if (checkedKeys.indexOf(item.id) > -1) {
+            if (is_index < 0) {
+              item.meta.role.push(this.role.id)
+            }
+          } else {
+            if (is_index > -1) {
+              item.meta.role.splice(is_index, 1)
+            }
           }
-        }
+          return item
+        })
+        Object.assign(this.rolesList[this.rolesListIndex], { name: this.role.name, description: this.role.description })
+        // await updateRole(this.role.key, this.role)
       } else {
-        const { data } = await addRole(this.role)
-        this.role.key = data.key
-        this.rolesList.push(this.role)
+        this.role.id = await createCategoryPermission(updateParams)
+        this.serviceRoutes = this.serviceRoutes.map(item => {
+          const is_index = item.meta.role.indexOf(this.role.id)
+          if (checkedKeys.indexOf(item.id) > -1) {
+            if (is_index < 0) {
+              item.meta.role.push(this.role.id)
+            }
+          } else {
+            if (is_index > -1) {
+              item.meta.role.splice(is_index, 1)
+            }
+          }
+          return item
+        })
+        this.rolesList.unshift(this.role)
       }
 
-      const { description, key, name } = this.role
+      const { description, name } = this.role
       this.dialogVisible = false
       this.$notify({
         title: 'Success',
         dangerouslyUseHTMLString: true,
         message: `
-            <div>Role Key: ${key}</div>
             <div>Role Nmae: ${name}</div>
             <div>Description: ${description}</div>
           `,

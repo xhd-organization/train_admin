@@ -1,38 +1,25 @@
 import request from '@/utils/request'
 
-export function getRoutes() {
+export function updateCategoryPermission(query) {
   return request({
-    url: '/routes',
-    method: 'get'
+    url: '/updateCategoryPermission',
+    method: 'post',
+    data: query
   })
 }
 
-export function getRoles() {
+export function createCategoryPermission(query) {
   return request({
-    url: '/roles',
-    method: 'get'
+    url: '/createCategoryPermission',
+    method: 'post',
+    data: query
   })
 }
 
-export function addRole(data) {
+export function deleteCategoryPsermission(data) {
   return request({
-    url: '/role',
+    url: '/deleteCategoryPsermission',
     method: 'post',
     data
-  })
-}
-
-export function updateRole(id, data) {
-  return request({
-    url: `/role/${id}`,
-    method: 'put',
-    data
-  })
-}
-
-export function deleteRole(id) {
-  return request({
-    url: `/role/${id}`,
-    method: 'delete'
   })
 }
