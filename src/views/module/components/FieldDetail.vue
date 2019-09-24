@@ -78,9 +78,9 @@
             </el-radio-group>
           </el-col>
         </el-row>
-        <el-row v-if="form.type === 'typeid' || form.type === 'select' || form.type === 'textarea'" :gutter="20" type="flex" justify="start">
+        <el-row v-if="form.type === 'typeid' || form.type === 'select' || form.type === 'textarea' || form.type === 'radio' || form.type === 'checkbox'" :gutter="20" type="flex" justify="start">
           <el-col :span="5" class="align">字段类型</el-col>
-          <el-col :span="4">
+          <el-col :span="8">
             <el-select v-model="form.setup['fieldtype']" placeholder="字段类型">
               <el-option v-if="form.type === 'typeid' || form.type === 'select' || form.type === 'radio' || form.type === 'checkbox'" value="varchar" label="字符 VARCHAR" />
               <el-option v-if="form.type === 'typeid' || form.type === 'select' || form.type === 'radio' || form.type === 'checkbox'" value="tinyint" label="整数 TINYINT(3)" />
@@ -94,7 +94,7 @@
           <el-col v-if="form.setup['fieldtype'] === 'tinyint' || form.setup['fieldtype'] === 'smallint' || form.setup['fieldtype'] === 'mediumint' || form.setup['fieldtype'] === 'int'" :span="4" class="align"><el-checkbox v-model="form.setup['numbertype']" label="1" checked>不包括负数</el-checkbox></el-col>
         </el-row>
         <el-row v-if="form.type === 'select' || form.type === 'radio' || form.type === 'checkbox'" :gutter="20" type="flex" justify="start">
-          <el-col :span="4" class="align">选项列表</el-col>
+          <el-col :span="5" class="align">选项列表</el-col>
           <el-col :span="8">
             <el-input v-model="form.setup['options']" type="textarea" placeholder="选项名称|值,选项名称|值" />
           </el-col>

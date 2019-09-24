@@ -50,7 +50,7 @@
         <template slot-scope="scope">
           <span v-if="field.type === 'radio' || field.type === 'checkbox' || field.type === 'select'">{{ scope.row[field.field] | formatFieldName(field.setup['options']) }}</span>
           <span v-else-if="field.type === 'datetime'">{{ scope.row[field.field] | parseTime }}</span>
-          <span v-else-if="field.type === 'source'">{{ scope.row[field.field] }}</span>
+          <span v-else-if="field.type === 'source' && source_info[field.field]">{{ formatSourceName(field.field, scope.row[field.field], field.setup['source_name'], field.setup['source_value']) }}</span>
           <span v-else>{{ scope.row[field.field] }}</span>
         </template>
       </el-table-column>
@@ -183,6 +183,23 @@ export default {
       tree_data: [], // 树形结构数据
       tree_data_base: [{ id: 0, name: '作为一级项' }], // 树形数据选择框
       tree_id: 1000
+    }
+  },
+  computed: {
+    // 处理列表数据源字段显示
+    formatSourceName() {
+      return function(field, value, source_name, source_value) {
+        let source_display = ''
+        if (this.source_info[field] instanceof Array && this.source_info[field].length > 0) {
+          for (let i = 0; i < this.source_info[field].length; i++) {
+            if (this.source_info[field][i][source_value] === value) {
+              source_display = this.source_info[field][i][source_name]
+              break
+            }
+          }
+        }
+        return source_display
+      }
     }
   },
   created() {
@@ -411,7 +428,7 @@ export default {
         if (list.total > 0) {
           const arr = list.items.map(item => {
             item['name'] = item[source_name]
-            item['value'] = item[source_value]
+            item['value'] = String(item[source_value])
             return item
           })
           return arr
