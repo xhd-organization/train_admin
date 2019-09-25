@@ -6,6 +6,7 @@
 
     <div class="right-menu">
       <template v-if="device!=='mobile'">
+        <router-link class="right-menu-item" to="/icon/index" title="图标"><svg-icon icon-class="icon" /></router-link>
         <search id="header-search" class="right-menu-item" />
 
         <error-log class="errLog-container right-menu-item hover-effect" />
