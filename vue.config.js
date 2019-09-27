@@ -41,7 +41,7 @@ module.exports = {
       // change xxx-api/login => mock/login
       // detail: https://cli.vuejs.org/config/#devserver-proxy
       '/admin': {
-        target: `http://192.168.16.154:7001`,
+        target: `http://127.0.0.1:7001`,
         changeOrigin: true,
         pathRewrite: {
           '^/admin': '/admin'

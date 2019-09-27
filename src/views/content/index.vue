@@ -233,7 +233,7 @@ export default {
             this.temp[item.field] = ''
             const setup = item.setup ? JSON.parse(item.setup) : {}
             if (item.type === 'radio' || item.type === 'checkbox' || item.type === 'groupid' || item.type === 'select') {
-              const options = this.filterSelectOptions(setup.options)
+              const options = this.filterSelectOptions(setup.options, setup.fieldtype)
               Object.assign(setup, { options })
             }
             if (item.type === 'file' || item.type === 'files' || item.type === 'images' || item.type === 'image') {
@@ -400,14 +400,14 @@ export default {
       })
     },
     // 过滤设置值
-    filterSelectOptions(options) {
+    filterSelectOptions(options, fieldType) {
       if (options) {
         options = options.indexOf(',') > -1 ? options.split(',') : options.split('\n')
         if (options && options instanceof Array && options.length > 0) {
           const arr = options.map(item => {
             return {
               name: item.split('|')[0],
-              value: item.split('|')[1].toString()
+              value: fieldType === 'tinyint' ? Number(item.split('|')[1]) : item.split('|')[1]
             }
           })
           return arr
