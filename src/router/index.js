@@ -130,9 +130,7 @@ export const constantRoutes = [
       {
         path: 'field/:moduleid',
         component: () => import('@/views/module/fieldindex'),
-        name: 'FieldModule',
         meta: { title: '模型字段', role: ['admin'] },
-        redirect: '',
         hidden: true,
         children: [{
           path: '',
