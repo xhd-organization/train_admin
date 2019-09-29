@@ -36,7 +36,7 @@ export function get_router(bcid, data, level = 0) {
           pagesize: subitem.pagesize,
           listfields: subitem.listfields,
           selectfields: subitem.selectfields,
-          role: subitem.postgroup ? subitem.postgroup.split(',') : [],
+          roles: subitem.postgroup ? subitem.postgroup.split(',') : [],
           is_tree: subitem.type === '2'
         }
         item['children'][idx]['component'] = subitem.componenturl ? () => import(`@/views/${subitem.componenturl}/index`) : () => import('@/views/content/index')
@@ -54,7 +54,7 @@ export function get_router(bcid, data, level = 0) {
         pagesize: item.pagesize,
         listfields: item.listfields,
         selectfields: item.selectfields,
-        role: item.postgroup ? item.postgroup.split(',') : [],
+        roles: item.postgroup ? item.postgroup.split(',') : [],
         is_tree: item.type === '2'
       }
       item['component'] = Layout
@@ -74,7 +74,7 @@ export function get_router(bcid, data, level = 0) {
             pagesize: item.pagesize,
             listfields: item.listfields,
             selectfields: item.selectfields,
-            role: item.postgroup ? item.postgroup.split(',') : [],
+            roles: item.postgroup ? item.postgroup.split(',') : [],
             is_tree: item.type === '2'
           }
         }]

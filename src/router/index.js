@@ -84,84 +84,6 @@ export const constantRoutes = [
     ]
   },
   {
-    path: '/category',
-    component: Layout,
-    redirect: '/category/index',
-    children: [
-      {
-        path: 'index',
-        component: () => import('@/views/category/index'),
-        name: 'Category',
-        meta: { title: '栏目管理', icon: 'list', noCache: true, role: ['admin'] }
-      },
-      {
-        path: 'create',
-        component: () => import('@/views/category/create'),
-        name: 'CreateCategory',
-        hidden: true,
-        meta: { title: '创建栏目', icon: 'form', noCache: true, role: ['admin'] }
-      },
-      {
-        path: ':catid',
-        component: () => import('@/views/category/edit'),
-        hidden: true,
-        name: 'EditCategory',
-        meta: { title: '编辑栏目', icon: 'form', noCache: true, role: ['admin'] }
-      }
-    ]
-  },
-  {
-    path: '/module',
-    component: Layout,
-    children: [
-      {
-        path: 'index',
-        component: () => import('@/views/module/index'),
-        name: 'Module',
-        meta: { title: '模型管理', icon: 'form', role: ['admin'] }
-      },
-      {
-        path: 'create',
-        component: () => import('@/views/module/create'),
-        name: 'CreateModule',
-        meta: { title: '创建模型', icon: 'edit', role: ['admin'] },
-        hidden: true
-      },
-      {
-        path: 'field/:moduleid',
-        component: () => import('@/views/module/fieldindex'),
-        meta: { title: '模型字段', role: ['admin'] },
-        hidden: true,
-        children: [{
-          path: '',
-          component: () => import('@/views/module/field'),
-          name: 'IndexField',
-          meta: { title: '字段列表', role: ['admin'] },
-          hidden: true
-        }, {
-          path: 'create',
-          component: () => import('@/views/module/createfield'),
-          name: 'CreateField',
-          meta: { title: '添加字段', role: ['admin'] },
-          hidden: true
-        }, {
-          path: ':fieldid',
-          component: () => import('@/views/module/editfield'),
-          name: 'EditField',
-          meta: { title: '编辑字段', role: ['admin'] },
-          hidden: true
-        }]
-      },
-      {
-        path: 'edit/:moduleid',
-        component: () => import('@/views/module/edit'),
-        name: 'EditModule',
-        meta: { title: '编辑模型', noCache: true, role: ['admin'] },
-        hidden: true
-      }
-    ]
-  },
-  {
     path: '/guide',
     component: Layout,
     hidden: true,
@@ -238,7 +160,84 @@ export const asyncRoutes = [
       }
     ]
   },
-
+  {
+    path: '/category',
+    component: Layout,
+    redirect: '/category/index',
+    children: [
+      {
+        path: 'index',
+        component: () => import('@/views/category/index'),
+        name: 'Category',
+        meta: { title: '栏目管理', icon: 'list', noCache: true, roles: ['admin'] }
+      },
+      {
+        path: 'create',
+        component: () => import('@/views/category/create'),
+        name: 'CreateCategory',
+        hidden: true,
+        meta: { title: '创建栏目', icon: 'form', noCache: true, roles: ['admin'] }
+      },
+      {
+        path: ':catid',
+        component: () => import('@/views/category/edit'),
+        hidden: true,
+        name: 'EditCategory',
+        meta: { title: '编辑栏目', icon: 'form', noCache: true, roles: ['admin'] }
+      }
+    ]
+  },
+  {
+    path: '/module',
+    component: Layout,
+    children: [
+      {
+        path: 'index',
+        component: () => import('@/views/module/index'),
+        name: 'Module',
+        meta: { title: '模型管理', icon: 'form', roles: ['admin'] }
+      },
+      {
+        path: 'create',
+        component: () => import('@/views/module/create'),
+        name: 'CreateModule',
+        meta: { title: '创建模型', icon: 'edit', roles: ['admin'] },
+        hidden: true
+      },
+      {
+        path: 'field/:moduleid',
+        component: () => import('@/views/module/fieldindex'),
+        meta: { title: '模型字段', roles: ['admin'] },
+        hidden: true,
+        children: [{
+          path: '',
+          component: () => import('@/views/module/field'),
+          name: 'IndexField',
+          meta: { title: '字段列表', roles: ['admin'] },
+          hidden: true
+        }, {
+          path: 'create',
+          component: () => import('@/views/module/createfield'),
+          name: 'CreateField',
+          meta: { title: '添加字段', roles: ['admin'] },
+          hidden: true
+        }, {
+          path: ':fieldid',
+          component: () => import('@/views/module/editfield'),
+          name: 'EditField',
+          meta: { title: '编辑字段', roles: ['admin'] },
+          hidden: true
+        }]
+      },
+      {
+        path: 'edit/:moduleid',
+        component: () => import('@/views/module/edit'),
+        name: 'EditModule',
+        meta: { title: '编辑模型', noCache: true, roles: ['admin'] },
+        hidden: true
+      }
+    ]
+  },
   {
     path: '/icon',
     component: Layout,

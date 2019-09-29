@@ -113,7 +113,6 @@ export default {
       fetchCategoryList().then(data => {
         if (data instanceof Array && data.length > 0) {
           this.category_arr = getTree(0, data)
-          console.log(this.category_arr)
         }
         this.listLoading = false
         this.$nextTick(() => {

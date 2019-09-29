@@ -169,7 +169,7 @@ export default {
       this.role = deepClone(row)
       const arr = []
       this.serviceRoutes.map(item => {
-        if (item.meta.role.indexOf(this.role.id) > -1) {
+        if (item.meta.roles.indexOf(this.role.id) > -1) {
           arr.push(item.id)
         }
       })
@@ -221,14 +221,14 @@ export default {
       if (isEdit) {
         await updateCategoryPermission(updateParams)
         this.serviceRoutes = this.serviceRoutes.map(item => {
-          const is_index = item.meta.role.indexOf(this.role.id)
+          const is_index = item.meta.roles.indexOf(this.role.id)
           if (checkedKeys.indexOf(item.id) > -1) {
             if (is_index < 0) {
-              item.meta.role.push(this.role.id)
+              item.meta.roles.push(this.role.id)
             }
           } else {
             if (is_index > -1) {
-              item.meta.role.splice(is_index, 1)
+              item.meta.roles.splice(is_index, 1)
             }
           }
           return item
@@ -238,14 +238,14 @@ export default {
       } else {
         this.role.id = await createCategoryPermission(updateParams)
         this.serviceRoutes = this.serviceRoutes.map(item => {
-          const is_index = item.meta.role.indexOf(this.role.id)
+          const is_index = item.meta.roles.indexOf(this.role.id)
           if (checkedKeys.indexOf(item.id) > -1) {
             if (is_index < 0) {
-              item.meta.role.push(this.role.id)
+              item.meta.roles.push(this.role.id)
             }
           } else {
             if (is_index > -1) {
-              item.meta.role.splice(is_index, 1)
+              item.meta.roles.splice(is_index, 1)
             }
           }
           return item
