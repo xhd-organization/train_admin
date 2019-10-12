@@ -17,7 +17,8 @@ export function parseTime(time, cFormat) {
   if (typeof time === 'object') {
     date = time
   } else {
-    if ((typeof time === 'string') && (/^[0-9]+$/.test(time))) {
+    if ((typeof time === 'string') && (/^[0-9]+$/.test(time)) && time.indexOf('Z') === -1) {
+      console.log(time)
       time = parseInt(time)
     }
     if ((typeof time === 'number') && (time.toString().length === 10)) {

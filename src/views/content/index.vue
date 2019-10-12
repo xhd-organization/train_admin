@@ -85,7 +85,7 @@
             :action="upload_url"
             :auto-upload="false"
             :accept="field.setup['filetype']"
-            :on-success="(res, file)=> { return uploadSuccess(res,file, field.field) }"
+            :on-success="(res, file)=> { return uploadSuccess(res, file, field.field) }"
             :on-preview="previewFile"
             :on-remove="(file)=> { return removeFile(file, field.field) }"
             :before-remove="beforeRemove"
@@ -116,7 +116,7 @@ import { fetchModuleFieldList } from '@/api/module'
 
 import waves from '@/directive/waves' // waves directive
 
-import { parseTime, formatTime, getTree } from '@/utils'
+import { parseTime, getTree } from '@/utils'
 import { validateMessages, valideRules } from '@/utils/validate'
 const jsonToExcel = import('@/vendor/Export2Excel')
 
@@ -143,7 +143,7 @@ export default {
     // 时间处理显示
     parseTime(value) {
       if (value) {
-        return formatTime(value, '{y}-{m}-{d} {h}:{i}:{s}', true)
+        return parseTime(value, '{y}-{m}-{d} {h}:{i}:{s}', true)
       }
       return value
     }
