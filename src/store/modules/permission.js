@@ -39,7 +39,8 @@ export function get_router(bcid, data, level = 0) {
           roles: subitem.postgroup ? subitem.postgroup.split(',') : [],
           is_tree: subitem.type === '2'
         }
-        item['children'][idx]['component'] = subitem.componenturl ? () => import(`@/views/${subitem.componenturl}/index`) : () => import('@/views/content/index')
+        const url = `@/views/${subitem.componenturl}/index`
+        item['children'][idx]['component'] = subitem.componenturl ? () => import(url) : () => import('@/views/content/index')
         item['children'][idx]['name'] = titleCase5(subitem.path) + titleCase5(item.path)
       })
     } else {
@@ -62,9 +63,10 @@ export function get_router(bcid, data, level = 0) {
         item['redirect'] = `/${item.path}/${item.children[0].path}`
         item['name'] = titleCase5(item.path)
       } else {
+        const url = `@/views/${item.componenturl}/index`
         item['children'] = [{
           path: 'index',
-          component: item.componenturl ? () => import(`@/views/${item.componenturl}/index`) : () => import('@/views/content/index'),
+          component: item.componenturl ? () => import(url) : () => import('@/views/content/index'),
           name: titleCase5(item.path),
           meta: {
             title: item.name,
