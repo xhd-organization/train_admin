@@ -32,22 +32,22 @@ module.exports = {
   productionSourceMap: false,
   devServer: {
     port: port,
-    open: true,
+    open: false,
     overlay: {
       warnings: false,
       errors: true
-    },
-    proxy: {
-      // change xxx-api/login => mock/login
-      // detail: https://cli.vuejs.org/config/#devserver-proxy
-      '/admin': {
-        target: `http://127.0.0.1:7001`,
-        changeOrigin: true,
-        pathRewrite: {
-          '^/admin': '/admin'
-        }
-      }
     }
+    // proxy: {
+    //   // change xxx-api/login => mock/login
+    //   // detail: https://cli.vuejs.org/config/#devserver-proxy
+    //   '/admin': {
+    //     target: `http://127.0.0.1:7001`,
+    //     changeOrigin: true,
+    //     pathRewrite: {
+    //       '^/admin': '/admin'
+    //     }
+    //   }
+    // }
     // after: require('./mock/mock-server.js')
   },
   configureWebpack: {
